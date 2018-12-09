@@ -28,7 +28,7 @@ func (s IssueSlice) Less(i, j int) bool {
 	return s[i].GetHTMLURL() < s[j].GetHTMLURL()
 }
 
-func getIssues(bySort string, queryArgs map[string]string) IssueSlice {
+func getIssuesByQuery(bySort string, queryArg string) IssueSlice {
 	opt := github.SearchOptions{
 		Sort: bySort,
 	}
@@ -36,10 +36,7 @@ func getIssues(bySort string, queryArgs map[string]string) IssueSlice {
 	var allIssues IssueSlice
 
 	query := bytes.NewBufferString(repoQuery)
-
-	for key, value := range queryArgs {
-		query.WriteString(fmt.Sprintf(" %s:%s", key, value))
-	}
+	query.WriteString(queryArg)
 
 	retryCount := 0
 	for {
@@ -71,6 +68,16 @@ func getIssues(bySort string, queryArgs map[string]string) IssueSlice {
 	return allIssues
 }
 
+func getIssues(bySort string, queryArgs map[string]string) IssueSlice {
+	query := bytes.NewBufferString("")
+
+	for key, value := range queryArgs {
+		query.WriteString(fmt.Sprintf(" %s:%s", key, value))
+	}
+
+	return getIssuesByQuery(bySort, query.String())
+}
+
 func generateDateRangeQuery(start string, end *string) string {
 	if end != nil {
 		return fmt.Sprintf("%s..%s", start, *end)
@@ -93,9 +100,19 @@ func getCreatedPullRequests(start string, end *string) []github.Issue {
 	})
 }
 
+func getPullReuestsMentioned(start string, end *string, mentions string) []github.Issue {
+	return getIssues("updated", map[string]string{
+		"is": "pr",
+		"mentions": mentions,
+		"-author": mentions,
+		"updated": generateDateRangeQuery(start, end),
+	})
+}
+
 func getReviewPullRequests(user string, start string, end *string) []github.Issue {
 	return getIssues("updated", map[string]string{
-		"is":        "pr",
+		"is": 	 "open",
+		"type":  "pr",
 		"commenter": user,
 		"-author":   user,
 		"updated":   generateDateRangeQuery(start, end),

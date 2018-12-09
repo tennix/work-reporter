@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -33,20 +34,29 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatGitHubIssuesForSlackOutput(&buf, issues)
 	buf.WriteString("\n")
 
-	issues = getCreatedPullRequests(start, nil)
-	formatSectionForSlackOutput(&buf, "New Pull Requests", "New PRs in last 24 hours")
-	formatGitHubIssuesForSlackOutput(&buf, issues)
-	buf.WriteString("\n")
+	//issues = getCreatedPullRequests(start, nil)
+	//formatSectionForSlackOutput(&buf, "New Pull Requests", "New PRs in last 24 hours")
+	//formatGitHubIssuesForSlackOutput(&buf, issues)
+	//buf.WriteString("\n")
 
-	oncallIssues := queryJiraIssues("project = ONCALL AND created >= \"-1d\"")
-	formatSectionForSlackOutput(&buf, "New OnCalls", "New on calls in last 24 hours")
-	formatJiraIssuesForSlackOutput(&buf, oncallIssues)
-	buf.WriteString("\n")
+	for _, member := range allMembers {
+		issues = getPullReuestsMentioned(start, nil, member)
+		formatSectionForSlackOutput(&buf, fmt.Sprintf("Pull Requests that mentioned you @%v", member), "PR that mentioned you in last 24 hours")
+		formatGitHubIssuesForSlackOutput(&buf, issues)
+		buf.WriteString("\n")
+	}
 
-	oncallIssues = queryJiraIssues("project = ONCALL AND priority = Highest AND resolution = Unresolved AND updated <= \"-3d\"")
-	formatSectionForSlackOutput(&buf, "Inactive OnCalls", "Highest priority on calls inactive >= 3 days")
-	formatJiraIssuesForSlackOutput(&buf, oncallIssues)
-	buf.WriteString("\n")
 
-	sendToSlack(buf.String())
+	//oncallIssues := queryJiraIssues("project = ONCALL AND created >= \"-1d\"")
+	//formatSectionForSlackOutput(&buf, "New OnCalls", "New on calls in last 24 hours")
+	//formatJiraIssuesForSlackOutput(&buf, oncallIssues)
+	//buf.WriteString("\n")
+	//
+	//oncallIssues = queryJiraIssues("project = ONCALL AND priority = Highest AND resolution = Unresolved AND updated <= \"-3d\"")
+	//formatSectionForSlackOutput(&buf, "Inactive OnCalls", "Highest priority on calls inactive >= 3 days")
+	//formatJiraIssuesForSlackOutput(&buf, oncallIssues)
+	//buf.WriteString("\n")
+
+	//sendToSlack(buf.String())
+	fmt.Println(buf.String())
 }

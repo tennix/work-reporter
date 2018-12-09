@@ -39,14 +39,14 @@ var (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "work-reporter",
-		Short: "Work Reporter",
+		Short: "TiDB-DDL Work Reporter",
 	}
 
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "C", "", "Config File, default ~/.work-reporter/config.toml")
 
 	rootCmd.AddCommand(
 		newDailyCommand(),
-		newWeeklyCommand(),
+		// newWeeklyCommand(),
 	)
 
 	cobra.OnInitialize(initGlobal)
@@ -81,28 +81,28 @@ func initGlobal() {
 
 	initTeamMembers()
 
-	jiraTransport := jira.BasicAuthTransport{
-		Username: config.Jira.User,
-		Password: config.Jira.Password,
-	}
-
-	jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
-	perror(err)
-
-	// In our company, we use same user and password for Jira and Confluence.
-	if len(config.Confluence.User) == 0 {
-		config.Confluence.User = config.Jira.User
-	}
-
-	if len(config.Confluence.Password) == 0 {
-		config.Confluence.Password = config.Jira.Password
-	}
-
-	// A little tricky here, both JIRA and Confluence use the same REST style.
-	confluenceTransport := jira.BasicAuthTransport{
-		Username: config.Confluence.User,
-		Password: config.Confluence.Password,
-	}
-	conflunceClient, err = jira.NewClient(confluenceTransport.Client(), config.Confluence.Endpoint)
-	perror(err)
+	//jiraTransport := jira.BasicAuthTransport{
+	//	Username: config.Jira.User,
+	//	Password: config.Jira.Password,
+	//}
+	//
+	//jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
+	//perror(err)
+	//
+	//// In our company, we use same user and password for Jira and Confluence.
+	//if len(config.Confluence.User) == 0 {
+	//	config.Confluence.User = config.Jira.User
+	//}
+	//
+	//if len(config.Confluence.Password) == 0 {
+	//	config.Confluence.Password = config.Jira.Password
+	//}
+	//
+	//// A little tricky here, both JIRA and Confluence use the same REST style.
+	//confluenceTransport := jira.BasicAuthTransport{
+	//	Username: config.Confluence.User,
+	//	Password: config.Confluence.Password,
+	//}
+	//conflunceClient, err = jira.NewClient(confluenceTransport.Client(), config.Confluence.Endpoint)
+	//perror(err)
 }

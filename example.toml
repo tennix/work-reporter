@@ -1,6 +1,6 @@
 [slack]
 token = "xxxx-xxxxxxx"
-channel = "tikv-team"
+channel = "tidb-ddl-team"
 user = "github_reporter"
 
 [jira]
@@ -9,7 +9,7 @@ password  = "password"
 endpoint = "https://url.com/jira/"
 server-id = "xxxx"
 server = "PingCAP JIRA"
-project = "TIKV"
+project = "TiDB"
 oncall = "OnCall"
 
 [confluence]
@@ -20,15 +20,15 @@ space = "TT"
 weekly-path = "Weekly Reports"
 
 [github]
+token = "xxx-xxxxx"
 repos = [
-    "tikv/tikv", 
-    "pingcap/pd", 
+    "pingcap/tidb",
 ]
 
 [[teams]]
 name = "Team"
 
     [[teams.members]]
-    name = "Siddon Tang"
-    github = "siddontang"
-    email = "tl@pingcap.com"
+    name = "Wink Yao"
+    github = "winkyao"
+    email = "wink@pingcap.com"
