@@ -47,16 +47,16 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 
-	dailyIssues := queryJiraIssues(`status not in ("Job Closed", 完成, DUPLICATED, Blocked, Closed, "WON'T FIX", Paused, Resolved) AND assignee in ("wink@pingcap.com", "xiaoliangliang@pingcap.com", chenshuang, "lixia@pingcap.com")  AND updated >= -1d ORDER BY updated`)
+	dailyIssues := queryJiraIssues(`assignee in ("wink@pingcap.com", "xiaoliangliang@pingcap.com", chenshuang, "lixia@pingcap.com")  AND updated >= -1d ORDER BY updated`)
 	formatSectionForSlackOutput(&buf, "Team JIRA Issue", "Updated in last 24 hours")
 	formatJiraIssuesForSlackOutput(&buf, dailyIssues)
 	buf.WriteString("\n")
 
-	dailyIssues = queryJiraIssues(`assignee in ("longheng@pingcap.com","wink@pingcap.com","xiaoliangliang@pingcap.com","lixia@pingcap.com","chenshuang@pingcap.com") AND created  >= -1d`)
-	formatSectionForSlackOutput(&buf, "New JIRA Issues", "JIRA issues created in last 24 hours")
-	formatJiraIssuesForSlackOutput(&buf, dailyIssues)
+	//dailyIssues = queryJiraIssues(`assignee in ("longheng@pingcap.com","wink@pingcap.com","xiaoliangliang@pingcap.com","lixia@pingcap.com","chenshuang@pingcap.com") AND created  >= -1d`)
+	//formatSectionForSlackOutput(&buf, "New JIRA Issues", "JIRA issues created in last 24 hours")
+	//formatJiraIssuesForSlackOutput(&buf, dailyIssues)
 	//buf.WriteString("\n")
 
-	sendToSlack(buf.String())
-	//fmt.Println(buf.String())
+	//sendToSlack(buf.String())
+	fmt.Println(buf.String())
 }
