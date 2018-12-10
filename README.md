@@ -12,9 +12,11 @@ We have been heavily using Github, JIRA and Confluence in our work, the tool nee
 ## Daily
 
 + Grabs new issues, pull requests during last 24 hours, adds to daily report
-+ Grabs the JIRA issues that are reaching the due date.
-+ Grabs the processing JIRA issues without setting a due date, and @ the issue owner.
 + sends messages to slack channel
 
 ## TODO
 
+### Daily
+
++ Grabs the JIRA issues that are reaching the due date.
++ Grabs the processing JIRA issues without setting a due date, and @ the issue owner.
