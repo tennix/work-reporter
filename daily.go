@@ -57,6 +57,6 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	//formatJiraIssuesForSlackOutput(&buf, dailyIssues)
 	//buf.WriteString("\n")
 
-	//sendToSlack(buf.String())
-	fmt.Println(buf.String())
+	sendToSlack(buf.String())
+	//fmt.Println(buf.String())
 }
