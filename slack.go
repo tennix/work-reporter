@@ -115,7 +115,7 @@ func formatGitHubIssueForSlackOutput(issue github.Issue) string {
 }
 
 func formatJiraIssueForSlackOutput(issue jira.Issue) string {
-	link := fmt.Sprintf("%sbrowse/%s", config.Jira.Endpoint, issue.Key)
+	link := fmt.Sprintf("%s/browse/%s", config.Jira.Endpoint, issue.Key)
 	status := "Unknown"
 	if issue.Fields != nil && issue.Fields.Status != nil {
 		status = issue.Fields.Status.Name
