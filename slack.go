@@ -87,7 +87,7 @@ func formatGitHubIssueForSlackOutput(issue github.Issue) string {
 	}
 	var tp string
 	if !isFromTeam {
-		tp = " _(Community)_"
+		tp = " _(NotDDLTeam)_"
 	}
 	var closed string
 	if issue.GetState() == "closed" {
@@ -95,8 +95,8 @@ func formatGitHubIssueForSlackOutput(issue github.Issue) string {
 	}
 
 	s := fmt.Sprintf(
-		"[ %s ]%s%s <%s|%s> by @%s",
-		slackutilsx.EscapeMessage(regexRepo.FindStringSubmatch(issue.GetHTMLURL())[1]),
+		"%s%s <%s|%s> by @%s",
+		// slackutilsx.EscapeMessage(regexRepo.FindStringSubmatch(issue.GetHTMLURL())[1]),
 		slackutilsx.EscapeMessage(closed),
 		slackutilsx.EscapeMessage(tp),
 		issue.GetHTMLURL(),

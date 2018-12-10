@@ -81,13 +81,13 @@ func initGlobal() {
 
 	initTeamMembers()
 
-	//jiraTransport := jira.BasicAuthTransport{
-	//	Username: config.Jira.User,
-	//	Password: config.Jira.Password,
-	//}
-	//
-	//jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
-	//perror(err)
+	jiraTransport := jira.BasicAuthTransport{
+		Username: config.Jira.User,
+		Password: config.Jira.Password,
+	}
+
+	jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
+	perror(err)
 	//
 	//// In our company, we use same user and password for Jira and Confluence.
 	//if len(config.Confluence.User) == 0 {
