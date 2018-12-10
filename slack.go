@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
@@ -156,4 +157,19 @@ func formatJiraIssuesForSlackOutput(buf *bytes.Buffer, issues []jira.Issue) {
 	for _, issue := range issues {
 		buf.WriteString(fmt.Sprintf("• %s\n", formatJiraIssueForSlackOutput(issue)))
 	}
+}
+
+func findOutIssuesWithoutDueDate(issues []jira.Issue) []jira.Issue {
+	if len(issues) == 0 {
+		return issues
+	}
+
+	noDueDateIssue := make([]jira.Issue, 0, len(issues))
+	for _, issue := range issues {
+		if time.Time(issue.Fields.Duedate).IsZero() {
+			noDueDateIssue = append(noDueDateIssue, issue)
+		}
+	}
+
+	return noDueDateIssue
 }

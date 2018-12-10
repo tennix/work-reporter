@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -34,11 +35,6 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatGitHubIssuesForSlackOutput(&buf, issues)
 	buf.WriteString("\n")
 
-	//issues = getCreatedPullRequests(start, nil)
-	//formatSectionForSlackOutput(&buf, "New Pull Requests", "New PRs in last 24 hours")
-	//formatGitHubIssuesForSlackOutput(&buf, issues)
-	//buf.WriteString("\n")
-
 	for _, member := range allMembers {
 		issues = getPullReuestsMentioned(start, nil, member)
 		formatSectionForSlackOutput(&buf, fmt.Sprintf("Pull Requests that mentioned you @%v", member), "PR that mentioned you in last 24 hours")
@@ -47,16 +43,23 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 
-	dailyIssues := queryJiraIssues(`assignee in ("wink@pingcap.com", "xiaoliangliang@pingcap.com", chenshuang, "lixia@pingcap.com")  AND updated >= -1d ORDER BY updated`)
+	members := strings.Join(allMemberEmals, ",")
+	dailyIssues := queryJiraIssues(fmt.Sprintf(`assignee in (%v)  AND updated >= -1d ORDER BY updated`, members))
 	formatSectionForSlackOutput(&buf, "Team JIRA Issue", "Updated in last 24 hours")
 	formatJiraIssuesForSlackOutput(&buf, dailyIssues)
 	buf.WriteString("\n")
 
-	//dailyIssues = queryJiraIssues(`assignee in ("longheng@pingcap.com","wink@pingcap.com","xiaoliangliang@pingcap.com","lixia@pingcap.com","chenshuang@pingcap.com") AND created  >= -1d`)
-	//formatSectionForSlackOutput(&buf, "New JIRA Issues", "JIRA issues created in last 24 hours")
-	//formatJiraIssuesForSlackOutput(&buf, dailyIssues)
-	//buf.WriteString("\n")
+	processingStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, "WON'T FIX", Paused, Resolved`
+	dueDateIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) and duedate <= 2d  ORDER BY updated`, processingStatus, members))
+	formatSectionForSlackOutput(&buf, "Going To Due Date JIRA Issue", "The due date will be less than 2 day")
+	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
+	buf.WriteString("\n")
 
-	//sendToSlack(buf.String())
-	fmt.Println(buf.String())
+	processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY updated`, processingStatus, members))
+	formatSectionForSlackOutput(&buf, "JIRA Issue Without Due Date", "Please add due date to processing JIRA issues")
+	formatJiraIssuesForSlackOutput(&buf, findOutIssuesWithoutDueDate(processingIssues))
+	buf.WriteString("\n")
+
+	sendToSlack(buf.String())
+	//fmt.Println(buf.String())
 }
