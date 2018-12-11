@@ -115,6 +115,60 @@ func formatGitHubIssueForSlackOutput(issue github.Issue) string {
 	return s
 }
 
+func formatGithubMentionsPRForSlackOutput(item *GithubItem) string {
+	slackMentions := make([]string, 0, len(item.memtions))
+	for _, memtion := range item.memtions {
+		email, ok := github2Email[memtion]
+		if !ok {
+			continue
+		}
+		slackMentions = append(slackMentions, buildSlackMention(email))
+	}
+
+	if len(slackMentions) == 0 {
+		return "_None_"
+	}
+
+	issue := item.issue
+	isFromTeam := false
+	login := issue.GetUser().GetLogin()
+
+	for _, id := range allMembers {
+		if strings.EqualFold(id, login) {
+			isFromTeam = true
+			break
+		}
+	}
+	var tp string
+	if !isFromTeam {
+		tp = " _(NotDDLTeam)_"
+	}
+	var closed string
+	if issue.GetState() == "closed" {
+		closed = " _(Closed)_"
+	}
+
+	s := fmt.Sprintf(
+		"%s%s <%s|%s> by @%s mentioned: %s",
+		// slackutilsx.EscapeMessage(regexRepo.FindStringSubmatch(issue.GetHTMLURL())[1]),
+		slackutilsx.EscapeMessage(closed),
+		slackutilsx.EscapeMessage(tp),
+		issue.GetHTMLURL(),
+		slackutilsx.EscapeMessage(issue.GetTitle()),
+		slackutilsx.EscapeMessage(issue.GetUser().GetLogin()),
+		strings.Join(slackMentions, ","),
+	)
+
+	if issue.Assignees != nil && len(issue.Assignees) > 0 {
+		s += fmt.Sprintf(", assigned to")
+		for _, assigne := range issue.Assignees {
+			s += fmt.Sprintf(" @%s", assigne.GetLogin())
+		}
+	}
+
+	return s
+}
+
 func formatJiraIssueForSlackOutput(issue jira.Issue) string {
 	link := fmt.Sprintf("%s/browse/%s", config.Jira.Endpoint, issue.Key)
 	status := "Unknown"
@@ -146,6 +200,17 @@ func formatGitHubIssuesForSlackOutput(buf *bytes.Buffer, issues []github.Issue) 
 	}
 	for _, issue := range issues {
 		buf.WriteString(fmt.Sprintf("• %s\n", formatGitHubIssueForSlackOutput(issue)))
+	}
+}
+
+func formatCollectMentionsPRForSlackOutput(buf *bytes.Buffer, collector map[string]*GithubItem) {
+	if len(collector) == 0 {
+		buf.WriteString("_None_\n")
+		return
+	}
+
+	for _, item := range collector {
+		buf.WriteString(fmt.Sprintf("• %s\n", formatGithubMentionsPRForSlackOutput(item)))
 	}
 }
 

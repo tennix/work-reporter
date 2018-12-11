@@ -14,8 +14,9 @@ import (
 var repoQuery string
 
 var allMembers []string
-
 var allMemberEmals []string
+
+var github2Email map[string]string
 
 const (
 	// go-github/github incorrectly handles URL escape with "+", so we avoid "+" by using a UTC time
@@ -128,10 +129,12 @@ func initRepoQuery() {
 }
 
 func initTeamMembers() {
+	github2Email = make(map[string]string)
 	for _, team := range config.Teams {
 		for _, member := range team.Members {
 			allMembers = append(allMembers, member.Github)
 			allMemberEmals = append(allMemberEmals, strconv.Quote(member.Email))
+			github2Email[member.Github] = member.Email
 		}
 	}
 }

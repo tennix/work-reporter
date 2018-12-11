@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/google/go-github/github"
 	"regexp"
 	"strings"
 	"time"
@@ -23,6 +24,29 @@ func newDailyCommand() *cobra.Command {
 	return m
 }
 
+type GithubItem struct {
+	issue github.Issue
+	memtions []string
+}
+
+// collectMentionsPR merge the memtion members.
+func collectMentionsPR(collector map[string]*GithubItem, member string, issues []github.Issue) {
+	for _, issue := range issues {
+		link := issue.GetHTMLURL()
+		githubItem, ok := collector[link]
+		if !ok {
+			item := &GithubItem{
+				issue: issue,
+				memtions: []string{member},
+			}
+			collector[link] = item
+			continue
+		}
+
+		githubItem.memtions = append(githubItem.memtions, member)
+	}
+}
+
 func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	now := time.Now().UTC()
 	start := now.Add(-24 * time.Hour).Format(githubUTCDateFormat)
@@ -35,12 +59,15 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatGitHubIssuesForSlackOutput(&buf, issues)
 	buf.WriteString("\n")
 
+	collector := make(map[string]*GithubItem)
 	for _, member := range allMembers {
 		issues = getPullReuestsMentioned(start, nil, member)
-		formatSectionForSlackOutput(&buf, fmt.Sprintf("Pull Requests that mentioned you @%v", member), "PR that mentioned you in last 24 hours")
-		formatGitHubIssuesForSlackOutput(&buf, issues)
-		buf.WriteString("\n")
+		collectMentionsPR(collector, member, issues)
 	}
+
+	formatSectionForSlackOutput(&buf, fmt.Sprintf("Pull Requests that mentioned you"), "PR that mentioned you in last 24 hours")
+	formatCollectMentionsPRForSlackOutput(&buf, collector)
+	buf.WriteString("\n")
 
 
 	members := strings.Join(allMemberEmals, ",")
@@ -51,7 +78,7 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 
 	processingStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, "WON'T FIX", Paused, Resolved`
 	dueDateIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) and duedate <= 2d  ORDER BY updated`, processingStatus, members))
-	formatSectionForSlackOutput(&buf, "Going To Due Date JIRA Issue", "The due date will be less than 2 day")
+	formatSectionForSlackOutput(&buf, "Getting To Due Date JIRA Issue", "The due date will be less than 2 day")
 	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
 	buf.WriteString("\n")
 
