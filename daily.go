@@ -76,13 +76,13 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatJiraIssuesForSlackOutput(&buf, dailyIssues)
 	buf.WriteString("\n")
 
-	processingStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, "WON'T FIX", Paused, Resolved`
-	dueDateIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) and duedate <= 2d  ORDER BY assignee`, processingStatus, members))
+	nonProcessStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, "WON'T FIX", Paused, Resolved, "CAN'T REPRODUCE"`
+	dueDateIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) and duedate <= 2d  ORDER BY assignee`, nonProcessStatus, members))
 	formatSectionForSlackOutput(&buf, "Getting To Due Date JIRA Issue", "The due date will be less than 2 day")
 	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
 	buf.WriteString("\n")
 
-	processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY assignee`, processingStatus, members))
+	processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY assignee`, nonProcessStatus, members))
 	formatSectionForSlackOutput(&buf, "JIRA Issue Without Due Date", "Please add due date to processing JIRA issues")
 	formatJiraIssuesForSlackOutput(&buf, findOutIssuesWithoutDueDate(processingIssues))
 	buf.WriteString("\n")
