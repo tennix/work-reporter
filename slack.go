@@ -183,10 +183,13 @@ func formatJiraIssueForSlackOutput(issue jira.Issue) string {
 	if issue.Fields != nil && issue.Fields.Assignee != nil {
 		assignment = fmt.Sprintf("assigned to %s", buildSlackMention(issue.Fields.Assignee.EmailAddress))
 	}
+
+	dueDate, _ := issue.Fields.Duedate.MarshalJSON()
 	return fmt.Sprintf(
-		"[ %s / %s ] <%s|%s> %s",
+		"[ %s / %s ] DueDate:%s <%s|%s> %s",
 		slackutilsx.EscapeMessage(status),
 		slackutilsx.EscapeMessage(priority),
+		slackutilsx.EscapeMessage(string(dueDate)),
 		link,
 		slackutilsx.EscapeMessage(issue.Fields.Summary),
 		assignment,
