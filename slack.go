@@ -231,7 +231,7 @@ func findOutIssuesWithoutDueDate(issues []jira.Issue) []jira.Issue {
 
 	noDueDateIssue := make([]jira.Issue, 0, len(issues))
 	for _, issue := range issues {
-		if time.Time(issue.Fields.Duedate).IsZero() {
+		if time.Time(issue.Fields.Duedate).IsZero() && strings.EqualFold(issue.Fields.Project.Name, "TiDB") {
 			noDueDateIssue = append(noDueDateIssue, issue)
 		}
 	}
