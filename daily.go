@@ -54,15 +54,15 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	var buf bytes.Buffer
 	buf.WriteString("*Daily Report*\n\n")
 
-	issues := getCreatedIssues(start, nil)
-	formatSectionForSlackOutput(&buf, "New Issues", "New issues in last 24 hours")
-	formatGitHubIssuesForSlackOutput(&buf, issues)
-	buf.WriteString("\n")
+	//issues := getCreatedIssues(start, nil)
+	//formatSectionForSlackOutput(&buf, "New Issues", "New issues in last 24 hours")
+	//formatGitHubIssuesForSlackOutput(&buf, issues)
+	//buf.WriteString("\n")
 
 	collector := make(map[string]*GithubItem)
 	for _, member := range allMembers {
-		issues = getPullReuestsMentioned(start, nil, member)
-		collectMentionsPR(collector, member, issues)
+		mentionedPRs := getPullReuestsMentioned(start, nil, member)
+		collectMentionsPR(collector, member, mentionedPRs)
 	}
 
 	formatSectionForSlackOutput(&buf, fmt.Sprintf("Pull Requests that mentioned you"), "PR that mentioned you in last 24 hours")
