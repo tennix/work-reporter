@@ -34,6 +34,7 @@ var (
 	githubClient    *github.Client
 	jiraClient      *jira.Client
 	conflunceClient *jira.Client
+	printToConsole bool
 )
 
 func main() {
@@ -43,6 +44,7 @@ func main() {
 	}
 
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "C", "", "Config File, default ~/.work-reporter/config.toml")
+	rootCmd.PersistentFlags().BoolVarP(&printToConsole, "print", "p", false, "Print the output to the console, default false")
 
 	rootCmd.AddCommand(
 		newDailyCommand(),
