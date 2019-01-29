@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"strings"
+	"time"
 
 	jira "github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
@@ -75,8 +76,9 @@ func runWeelyReportCommandFunc(cmd *cobra.Command, args []string) {
 
 	formatPageEndForHtmlOutput(&body)
 
-	//title := lastSprint.Name
-	createWeeklyReport("2019-01-29 DDL Due Dates", body.String())
+	now := time.Now()
+	title := fmt.Sprintf("%s DDL Due Dates", now.Format("2006-01-02"))
+	createWeeklyReport(title, body.String())
 }
 
 func runRotateSprintCommandFunc(cmd *cobra.Command, args []string) {
