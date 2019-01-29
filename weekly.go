@@ -41,42 +41,42 @@ func newWeeklyCommand() *cobra.Command {
 		Short: "Weely Tasks",
 	}
 	m.AddCommand(newWeeklyReportCommand())
-	m.AddCommand(newRotateSprintCommand())
+	//m.AddCommand(newRotateSprintCommand())
 	return m
 }
 
 func runWeelyReportCommandFunc(cmd *cobra.Command, args []string) {
-	boardID := getBoardID(config.Jira.Project, "scrum")
-	lastSprint := getLatestPassedSprint(boardID)
-	nextSprint := getNearestFutureSprint(boardID)
+	//boardID := getBoardID(config.Jira.Project, "scrum")
+	//lastSprint := getLatestPassedSprint(boardID)
+	//nextSprint := getNearestFutureSprint(boardID)
 
 	var body bytes.Buffer
 
-	startDate := lastSprint.StartDate.Format(dayFormat)
-	endDate := lastSprint.EndDate.Format(dayFormat)
-
-	githubStartDate := lastSprint.StartDate.UTC().Format(githubUTCDateFormat)
-	githubEndDate := lastSprint.EndDate.UTC().Format(githubUTCDateFormat)
+	//startDate := lastSprint.StartDate.Format(dayFormat)
+	//endDate := lastSprint.EndDate.Format(dayFormat)
+	//
+	//githubStartDate := lastSprint.StartDate.UTC().Format(githubUTCDateFormat)
+	//githubEndDate := lastSprint.EndDate.UTC().Format(githubUTCDateFormat)
 
 	formatPageBeginForHtmlOutput(&body)
 	genWeeklyReportToc(&body)
-	genWeeklyReportOnCall(&body, startDate, endDate)
-	genWeeklyReportIssuesPRs(&body, githubStartDate, githubEndDate)
+	genWeeklyReportOnCall(&body)
+	//genWeeklyReportIssuesPRs(&body, githubStartDate, githubEndDate)
 
-	for _, team := range config.Teams {
-		fmt.Println(team.Name)
-		formatSectionBeginForHtmlOutput(&body)
-		body.WriteString(fmt.Sprintf("<h1>%s Team</h1>", team.Name))
-		for _, m := range team.Members {
-			genWeeklyUserPage(&body, m, *lastSprint, *nextSprint)
-		}
-		formatSectionEndForHtmlOutput(&body)
-	}
+	//for _, team := range config.Teams {
+	//	fmt.Println(team.Name)
+	//	formatSectionBeginForHtmlOutput(&body)
+	//	body.WriteString(fmt.Sprintf("<h1>%s Team</h1>", team.Name))
+	//	for _, m := range team.Members {
+	//		genWeeklyUserPage(&body, m, *lastSprint, *nextSprint)
+	//	}
+	//	formatSectionEndForHtmlOutput(&body)
+	//}
 
 	formatPageEndForHtmlOutput(&body)
 
-	title := lastSprint.Name
-	createWeeklyReport(title, body.String())
+	//title := lastSprint.Name
+	createWeeklyReport("2019-01-29 DDL Due Dates", body.String())
 }
 
 func runRotateSprintCommandFunc(cmd *cobra.Command, args []string) {
@@ -203,32 +203,37 @@ func genReviewPullRequests(buf *bytes.Buffer, user, start, end string) {
 	formatGitHubIssuesForHtmlOutput(buf, issues)
 }
 
-func genWeeklyReportOnCall(buf *bytes.Buffer, start, end string) {
+func genWeeklyReportOnCall(buf *bytes.Buffer) {
 	formatSectionBeginForHtmlOutput(buf)
 
-	buf.WriteString("\n<h1>New OnCall</h1>\n")
-	buf.WriteString(fmt.Sprintf("\n<blockquote>Newly created OnCalls (created &gt;= %s AND created &lt; %s)</blockquote>\n", start, end))
+	buf.WriteString("\n<h1>Issues Exceed Due Date</h1>\n")
+	stopStatus := `"Job Closed",Closed,"CAN'T REPRODUCE",Paused,Blocked,完成,TODO,"To Do"`
+
 	html := `
 <ac:structured-macro ac:name="jira">
-  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status</ac:parameter>
+  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status,due</ac:parameter>
   <ac:parameter ac:name="server">%s</ac:parameter>
   <ac:parameter ac:name="serverId">%s</ac:parameter>
-  <ac:parameter ac:name="jqlQuery">project = %s AND created &gt;= %s AND created &lt; %s</ac:parameter>
+  <ac:parameter ac:name="jqlQuery">%s</ac:parameter>
 </ac:structured-macro>
 `
-	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, config.Jira.OnCall, start, end))
 
-	buf.WriteString("\n<h1>Highest Priority</h1>\n")
-	buf.WriteString("\n<blockquote>Unresolved highest priority OnCalls (priority = Highest AND resolution = Unresolved)</blockquote>\n")
-	html = `
-<ac:structured-macro ac:name="jira">
-  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status</ac:parameter>
-  <ac:parameter ac:name="server">%s</ac:parameter>
-  <ac:parameter ac:name="serverId">%s</ac:parameter>
-  <ac:parameter ac:name="jqlQuery">project = %s AND priority = Highest AND resolution = Unresolved</ac:parameter>
-</ac:structured-macro>
-`
-	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, config.Jira.OnCall))
+	for _, member := range allMemberEmals {
+		jqlQuery := fmt.Sprintf(`assignee = %v AND duedate &lt; now() AND status not in (%s)`, member, stopStatus)
+		buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, jqlQuery))
+	}
+
+//	buf.WriteString("\n<h1>Highest Priority</h1>\n")
+//	buf.WriteString("\n<blockquote>Unresolved highest priority OnCalls (priority = Highest AND resolution = Unresolved)</blockquote>\n")
+//	html = `
+//<ac:structured-macro ac:name="jira">
+//  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status</ac:parameter>
+//  <ac:parameter ac:name="server">%s</ac:parameter>
+//  <ac:parameter ac:name="serverId">%s</ac:parameter>
+//  <ac:parameter ac:name="jqlQuery">project = %s AND priority = Highest AND resolution = Unresolved</ac:parameter>
+//</ac:structured-macro>
+//`
+//	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, config.Jira.OnCall))
 
 	formatSectionEndForHtmlOutput(buf)
 }
@@ -270,5 +275,5 @@ func createWeeklyReport(title string, value string) {
 		c = createContent(space, parent.Id, title, value)
 	}
 
-	sendToSlack("Weekly report for sprint %s is generated: %s%s", title, config.Confluence.Endpoint, c.Links.WebUI)
+	//sendToSlack("Weekly report for sprint %s is generated: %s%s", title, config.Confluence.Endpoint, c.Links.WebUI)
 }

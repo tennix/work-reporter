@@ -48,7 +48,7 @@ func main() {
 
 	rootCmd.AddCommand(
 		newDailyCommand(),
-		// newWeeklyCommand(),
+		newWeeklyCommand(),
 	)
 
 	cobra.OnInitialize(initGlobal)
@@ -90,21 +90,22 @@ func initGlobal() {
 
 	jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
 	perror(err)
-	//
-	//// In our company, we use same user and password for Jira and Confluence.
-	//if len(config.Confluence.User) == 0 {
-	//	config.Confluence.User = config.Jira.User
-	//}
-	//
-	//if len(config.Confluence.Password) == 0 {
-	//	config.Confluence.Password = config.Jira.Password
-	//}
-	//
-	//// A little tricky here, both JIRA and Confluence use the same REST style.
-	//confluenceTransport := jira.BasicAuthTransport{
-	//	Username: config.Confluence.User,
-	//	Password: config.Confluence.Password,
-	//}
-	//conflunceClient, err = jira.NewClient(confluenceTransport.Client(), config.Confluence.Endpoint)
-	//perror(err)
+
+	// In our company, we use same user and password for Jira and Confluence.
+	if len(config.Confluence.User) == 0 {
+		config.Confluence.User = config.Jira.User
+	}
+
+	if len(config.Confluence.Password) == 0 {
+		config.Confluence.Password = config.Jira.Password
+	}
+
+	// A little tricky here, both JIRA and Confluence use the same REST style.
+	confluenceTransport := jira.BasicAuthTransport{
+		Username: config.Confluence.User,
+		Password: config.Confluence.Password,
+	}
+
+	conflunceClient, err = jira.NewClient(confluenceTransport.Client(), config.Confluence.Endpoint)
+	perror(err)
 }
