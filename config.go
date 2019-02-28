@@ -13,13 +13,14 @@ type Slack struct {
 }
 
 type Jira struct {
-	User     string `toml:"user"`
-	Password string `toml:"password"`
-	Endpoint string `toml:"endpoint"`
-	ServerID string `toml:"server-id"`
-	Server   string `toml:"server"`
-	Project  string `toml:"project"`
-	OnCall   string `toml:"oncall"`
+	User             string `toml:"user"`
+	Password         string `toml:"password"`
+	Endpoint         string `toml:"endpoint"`
+	ServerID         string `toml:"server-id"`
+	Server           string `toml:"server"`
+	Project          string `toml:"project"`
+	OnCall           string `toml:"oncall"`
+	NonProcessStatus string `toml:"non-process-status"`
 }
 
 type Member struct {

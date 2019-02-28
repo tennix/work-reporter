@@ -25,7 +25,7 @@ func newDailyCommand() *cobra.Command {
 }
 
 type GithubItem struct {
-	issue github.Issue
+	issue    github.Issue
 	memtions []string
 }
 
@@ -36,7 +36,7 @@ func collectMentionsPR(collector map[string]*GithubItem, member string, issues [
 		githubItem, ok := collector[link]
 		if !ok {
 			item := &GithubItem{
-				issue: issue,
+				issue:    issue,
 				memtions: []string{member},
 			}
 			collector[link] = item
@@ -69,7 +69,6 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatCollectMentionsPRForSlackOutput(&buf, collector)
 	buf.WriteString("\n")
 
-
 	members := strings.Join(allMemberEmals, ",")
 	dailyIssues := queryJiraIssues(fmt.Sprintf(`assignee in (%v)  AND updated >= -1d ORDER BY assignee`, members))
 	formatSectionForSlackOutput(&buf, "Team JIRA Issue", "Updated in last 24 hours")
@@ -77,7 +76,8 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	buf.WriteString("\n")
 
 	// TODO: make the filter syntax configurable in the config file.
-	nonProcessStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, Paused, Resolved, "CAN'T REPRODUCE", Cancelled, "WON'T FIX"`
+	// nonProcessStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, Paused, Resolved, "CAN'T REPRODUCE", Cancelled, "WON'T FIX"`
+	nonProcessStatus := config.Jira.NonProcessStatus
 	dueDateIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) and duedate <= 2d  ORDER BY assignee`, nonProcessStatus, members))
 	formatSectionForSlackOutput(&buf, "Getting To Due Date JIRA Issue", "The due date will be less than 2 day")
 	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
