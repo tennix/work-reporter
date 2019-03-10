@@ -77,7 +77,7 @@ func runWeelyReportCommandFunc(cmd *cobra.Command, args []string) {
 	formatPageEndForHtmlOutput(&body)
 
 	now := time.Now()
-	title := fmt.Sprintf("%s DDL Due Dates", now.Format("2006-01-02"))
+	title := fmt.Sprintf("%s SQL-Infra Due Dates", now.Format("2006-01-02"))
 	createWeeklyReport(title, body.String())
 }
 
@@ -225,17 +225,17 @@ func genWeeklyReportOnCall(buf *bytes.Buffer) {
 		buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, jqlQuery))
 	}
 
-//	buf.WriteString("\n<h1>Highest Priority</h1>\n")
-//	buf.WriteString("\n<blockquote>Unresolved highest priority OnCalls (priority = Highest AND resolution = Unresolved)</blockquote>\n")
-//	html = `
-//<ac:structured-macro ac:name="jira">
-//  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status</ac:parameter>
-//  <ac:parameter ac:name="server">%s</ac:parameter>
-//  <ac:parameter ac:name="serverId">%s</ac:parameter>
-//  <ac:parameter ac:name="jqlQuery">project = %s AND priority = Highest AND resolution = Unresolved</ac:parameter>
-//</ac:structured-macro>
-//`
-//	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, config.Jira.OnCall))
+	//	buf.WriteString("\n<h1>Highest Priority</h1>\n")
+	//	buf.WriteString("\n<blockquote>Unresolved highest priority OnCalls (priority = Highest AND resolution = Unresolved)</blockquote>\n")
+	//	html = `
+	//<ac:structured-macro ac:name="jira">
+	//  <ac:parameter ac:name="columns">key,summary,created,updated,assignee,status</ac:parameter>
+	//  <ac:parameter ac:name="server">%s</ac:parameter>
+	//  <ac:parameter ac:name="serverId">%s</ac:parameter>
+	//  <ac:parameter ac:name="jqlQuery">project = %s AND priority = Highest AND resolution = Unresolved</ac:parameter>
+	//</ac:structured-macro>
+	//`
+	//	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, config.Jira.OnCall))
 
 	formatSectionEndForHtmlOutput(buf)
 }
