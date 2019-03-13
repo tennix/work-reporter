@@ -83,10 +83,10 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
 	buf.WriteString("\n")
 
-	processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY assignee`, nonProcessStatus, members))
-	formatSectionForSlackOutput(&buf, "JIRA Issue Without Due Date", "Please add due date to processing JIRA issues")
-	formatJiraIssuesForSlackOutput(&buf, findOutIssuesWithoutDueDate(processingIssues))
-	buf.WriteString("\n")
+	//processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY assignee`, nonProcessStatus, members))
+	//formatSectionForSlackOutput(&buf, "JIRA Issue Without Due Date", "Please add due date to processing JIRA issues")
+	//formatJiraIssuesForSlackOutput(&buf, findOutIssuesWithoutDueDate(processingIssues))
+	//buf.WriteString("\n")
 
 	if printToConsole {
 		fmt.Println(buf.String())
