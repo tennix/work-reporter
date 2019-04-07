@@ -9,6 +9,7 @@ import (
 
 	jira "github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
+	"github.com/ngaut/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 )
@@ -18,7 +19,7 @@ func perror(err error) {
 		return
 	}
 
-	println(err.Error())
+	log.Error(err.Error())
 	os.Exit(1)
 }
 
@@ -34,7 +35,7 @@ var (
 	githubClient    *github.Client
 	jiraClient      *jira.Client
 	conflunceClient *jira.Client
-	printToConsole bool
+	printToConsole  bool
 )
 
 func main() {
@@ -49,6 +50,7 @@ func main() {
 	rootCmd.AddCommand(
 		newDailyCommand(),
 		newWeeklyCommand(),
+		newVersionReleaseCommand(),
 	)
 
 	cobra.OnInitialize(initGlobal)

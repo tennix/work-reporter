@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"strconv"
 	"time"
 
@@ -197,6 +198,6 @@ func queryJiraIssues(jql string) []jira.Issue {
 	issues, _, err := jiraClient.Issue.Search(jql, &jira.SearchOptions{
 		MaxResults: 1000,
 	})
-	perror(err)
+	perror(errors.Wrap(err, fmt.Sprintf("jql:%s", jql)))
 	return issues
 }

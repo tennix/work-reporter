@@ -3,12 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html"
-	"strings"
 	"time"
 
-	jira "github.com/andygrunwald/go-jira"
-	"github.com/google/go-github/github"
+	"github.com/andygrunwald/go-jira"
 	"github.com/spf13/cobra"
 )
 
@@ -61,7 +58,7 @@ func runWeelyReportCommandFunc(cmd *cobra.Command, args []string) {
 
 	formatPageBeginForHtmlOutput(&body)
 	genWeeklyReportToc(&body)
-	genWeeklyReportOnCall(&body)
+	genWeeklyReportDuedate(&body)
 	//genWeeklyReportIssuesPRs(&body, githubStartDate, githubEndDate)
 
 	//for _, team := range config.Teams {
@@ -99,83 +96,6 @@ func runRotateSprintCommandFunc(cmd *cobra.Command, args []string) {
 	sendToSlack("Current active Sprint %s is closed", activeSprint.Name)
 }
 
-func formatPageBeginForHtmlOutput(buf *bytes.Buffer) {
-	buf.WriteString(`<ac:layout>`)
-}
-
-func formatPageEndForHtmlOutput(buf *bytes.Buffer) {
-	buf.WriteString(`</ac:layout>`)
-}
-
-func formatSectionBeginForHtmlOutput(buf *bytes.Buffer) {
-	buf.WriteString(`<ac:layout-section ac:type="single"><ac:layout-cell><hr/>`)
-	buf.WriteString("\n")
-}
-
-func formatSectionEndForHtmlOutput(buf *bytes.Buffer) {
-	buf.WriteString(`</ac:layout-cell></ac:layout-section>`)
-	buf.WriteString("\n")
-}
-
-func formatLabelForHtmlOutput(name string, color string) string {
-	s := fmt.Sprintf(`
-	<ac:structured-macro ac:macro-id="9f29312a-2730-48f0-ab6d-91d6bef3f016" ac:name="status" ac:schema-version="1">
-		<ac:parameter ac:name="colour">%s</ac:parameter>
-		<ac:parameter ac:name="title">%s</ac:parameter>
-	</ac:structured-macro>`, color, html.EscapeString(name))
-	return s
-}
-
-func formatGitHubIssueForHtmlOutput(issue github.Issue) string {
-	isFromTeam := false
-	login := issue.GetUser().GetLogin()
-
-	for _, id := range allMembers {
-		if strings.EqualFold(id, login) {
-			isFromTeam = true
-			break
-		}
-	}
-
-	var labelColor = jiraLabelColorGrey
-	if issue.GetState() == "closed" {
-		labelColor = jiraLabelColorGreen
-	}
-
-	s := fmt.Sprintf(
-		`%s <a href="%s">%s</a> by @%s`,
-		formatLabelForHtmlOutput(regexRepo.FindStringSubmatch(issue.GetHTMLURL())[1], labelColor),
-		issue.GetHTMLURL(),
-		html.EscapeString(issue.GetTitle()),
-		html.EscapeString(issue.GetUser().GetLogin()),
-	)
-
-	if issue.Assignees != nil && len(issue.Assignees) > 0 {
-		s += fmt.Sprintf(", assigned to")
-		for _, assigne := range issue.Assignees {
-			s += fmt.Sprintf(" @%s", assigne.GetLogin())
-		}
-	}
-
-	if !isFromTeam {
-		s += " " + formatLabelForHtmlOutput("Community", jiraLabelColorBlue)
-	}
-
-	return s
-}
-
-func formatGitHubIssuesForHtmlOutput(buf *bytes.Buffer, issues []github.Issue) {
-	if len(issues) == 0 {
-		buf.WriteString("<p><i>None</i></p>\n")
-		return
-	}
-	buf.WriteString("<ul>")
-	for _, issue := range issues {
-		buf.WriteString(fmt.Sprintf("<li>%s</li>\n", formatGitHubIssueForHtmlOutput(issue)))
-	}
-	buf.WriteString("</ul>")
-}
-
 func genWeeklyUserPage(buf *bytes.Buffer, m Member, curSprint jira.Sprint, nextSprint jira.Sprint) {
 	sprintID := curSprint.ID
 	nextSprintID := nextSprint.ID
@@ -205,7 +125,7 @@ func genReviewPullRequests(buf *bytes.Buffer, user, start, end string) {
 	formatGitHubIssuesForHtmlOutput(buf, issues)
 }
 
-func genWeeklyReportOnCall(buf *bytes.Buffer) {
+func genWeeklyReportDuedate(buf *bytes.Buffer) {
 	formatSectionBeginForHtmlOutput(buf)
 
 	buf.WriteString("\n<h1>Issues Exceed Due Date</h1>\n")
@@ -246,23 +166,6 @@ func genWeeklyReportIssuesPRs(buf *bytes.Buffer, start, end string) {
 	buf.WriteString("\n<h1>New Issues</h1>\n")
 	buf.WriteString(fmt.Sprintf("\n<blockquote>New GitHub issues (created: %s..%s)</blockquote>\n", start, end))
 	formatGitHubIssuesForHtmlOutput(buf, issues)
-	formatSectionEndForHtmlOutput(buf)
-}
-
-func genWeeklyReportToc(buf *bytes.Buffer) {
-	formatSectionBeginForHtmlOutput(buf)
-
-	toc := `
-<ac:structured-macro ac:name="toc">
-  <ac:parameter ac:name="printable">true</ac:parameter>
-  <ac:parameter ac:name="style">square</ac:parameter>
-  <ac:parameter ac:name="maxLevel">2</ac:parameter>
-  <ac:parameter ac:name="class">bigpink</ac:parameter>
-  <ac:parameter ac:name="type">list</ac:parameter>
-</ac:structured-macro>
-	`
-	buf.WriteString(toc)
-
 	formatSectionEndForHtmlOutput(buf)
 }
 

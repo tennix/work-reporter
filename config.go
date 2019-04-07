@@ -48,12 +48,19 @@ type Confluence struct {
 	WeeklyPath string `toml:"weekly-path"`
 }
 
+type IssueLink struct {
+	LinkTo     string   `toml:"link-to"`
+	ReleaseVer string   `toml:"release-version"`
+	Labels     []string `toml:"labels"`
+}
+
 type Config struct {
-	Slack      Slack      `toml:"slack"`
-	Jira       Jira       `toml:"jira"`
-	Confluence Confluence `toml:"confluence"`
-	Github     Github     `toml:"github"`
-	Teams      []Team     `toml:"teams"`
+	Slack      Slack       `toml:"slack"`
+	Jira       Jira        `toml:"jira"`
+	Confluence Confluence  `toml:"confluence"`
+	Github     Github      `toml:"github"`
+	Teams      []Team      `toml:"teams"`
+	IssueLinks []IssueLink `toml:"issue-links"`
 }
 
 // NewConfigFromFile creates the configuration from file
