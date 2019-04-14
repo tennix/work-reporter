@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/juju/errors"
 	"sort"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func getIssuesByQuery(bySort string, queryArg string) IssueSlice {
 			}
 		}
 
-		perror(err)
+		perror(errors.Trace(err))
 
 		allIssues = append(allIssues, issues.Issues...)
 
@@ -106,17 +107,17 @@ func getCreatedPullRequests(start string, end *string) []github.Issue {
 
 func getPullReuestsMentioned(start string, end *string, mentions string) []github.Issue {
 	return getIssues("updated", map[string]string{
-		"is": "pr",
+		"is":       "pr",
 		"mentions": mentions,
-		"-author": mentions,
-		"updated": generateDateRangeQuery(start, end),
+		"-author":  mentions,
+		"updated":  generateDateRangeQuery(start, end),
 	})
 }
 
 func getReviewPullRequests(user string, start string, end *string) []github.Issue {
 	return getIssues("updated", map[string]string{
-		"is": 	 "open",
-		"type":  "pr",
+		"is":        "open",
+		"type":      "pr",
 		"commenter": user,
 		"-author":   user,
 		"updated":   generateDateRangeQuery(start, end),

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"strconv"
 	"time"
+
+	"github.com/juju/errors"
 
 	jira "github.com/andygrunwald/go-jira"
 )
@@ -26,7 +27,7 @@ func getBoardID(project string, boardType string) int {
 	}
 
 	boards, _, err := jiraClient.Board.GetAllBoards(&opts)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return boards.Values[0].ID
 }
@@ -38,7 +39,7 @@ func getSprints(boardID int, state string) []jira.Sprint {
 
 	// TODO: support pagination
 	sprints, _, err := jiraClient.Board.GetAllSprintsWithOptions(boardID, &opts)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return sprints.Values
 }
@@ -51,7 +52,7 @@ func getActiveSprint(boardID int) jira.Sprint {
 
 func getLatestPassedSprint(boardID int) *jira.Sprint {
 	sprints, _, err := jiraClient.Board.GetAllSprints(strconv.Itoa(boardID))
-	perror(err)
+	perror(errors.Trace(err))
 
 	now := time.Now()
 	minDiff := time.Hour * 7 * 24
@@ -77,7 +78,7 @@ func getLatestPassedSprint(boardID int) *jira.Sprint {
 
 func getNearestFutureSprint(boardID int) *jira.Sprint {
 	sprints, _, err := jiraClient.Board.GetAllSprints(strconv.Itoa(boardID))
-	perror(err)
+	perror(errors.Trace(err))
 
 	now := time.Now()
 	minDiff := time.Hour * 7 * 24
@@ -106,11 +107,11 @@ func createSprint(boardID int, name string, startDate, endDate string) jira.Spri
 		"originBoardId": strconv.Itoa(boardID),
 	}
 	req, err := jiraClient.NewRequest("POST", apiEndpoint, sprint)
-	perror(err)
+	perror(errors.Trace(err))
 
 	responseSprint := new(jira.Sprint)
 	_, err = jiraClient.Do(req, responseSprint)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return *responseSprint
 }
@@ -137,10 +138,10 @@ func createNextSprint(boardID int, startDate time.Time) jira.Sprint {
 func deleteSprint(sprintID int) {
 	apiEndpoint := "rest/agile/1.0/sprint/" + strconv.Itoa(sprintID)
 	req, err := jiraClient.NewRequest("DELETE", apiEndpoint, nil)
-	perror(err)
+	perror(errors.Trace(err))
 
 	_, err = jiraClient.Do(req, nil)
-	perror(err)
+	perror(errors.Trace(err))
 }
 
 func updateSprintTime(sprintID int, startDate, endDate string) jira.Sprint {
@@ -160,11 +161,11 @@ func updateSprint(sprintID int, args map[string]string) jira.Sprint {
 	apiEndpoint := "rest/agile/1.0/sprint/" + strconv.Itoa(sprintID)
 
 	req, err := jiraClient.NewRequest("POST", apiEndpoint, args)
-	perror(err)
+	perror(errors.Trace(err))
 
 	responseSprint := new(jira.Sprint)
 	_, err = jiraClient.Do(req, responseSprint)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return *responseSprint
 }
@@ -184,9 +185,9 @@ func moveIssuesToSprint(sprintID int, issues []jira.Issue) {
 		if len(buffer) == batchMax || idx+1 == total {
 			payload := jira.IssuesWrapper{Issues: buffer}
 			req, err := jiraClient.NewRequest("POST", apiEndpoint, payload)
-			perror(err)
+			perror(errors.Trace(err))
 			_, err = jiraClient.Do(req, nil)
-			perror(err)
+			perror(errors.Trace(err))
 
 			// clear buffer
 			buffer = buffer[:0]
@@ -198,6 +199,6 @@ func queryJiraIssues(jql string) []jira.Issue {
 	issues, _, err := jiraClient.Issue.Search(jql, &jira.SearchOptions{
 		MaxResults: 1000,
 	})
-	perror(errors.Wrap(err, fmt.Sprintf("jql:%s", jql)))
+	perror(errors.Annotate(err, fmt.Sprintf("jql:%s", jql)))
 	return issues
 }

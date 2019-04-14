@@ -8,6 +8,7 @@ import (
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
+	"github.com/juju/errors"
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackutilsx"
 )
@@ -30,7 +31,7 @@ func initSlackMemberCache() {
 		return
 	}
 	users, err := getSlackClient().GetUsers()
-	perror(err)
+	perror(errors.Trace(err))
 	if len(users) == 0 {
 		perror(fmt.Errorf("cannot retrieve slack user list. slack app must be granted `users:read` and `users:read.email` permission"))
 	}

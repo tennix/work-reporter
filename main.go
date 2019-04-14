@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/juju/errors"
 	"os"
 	"os/user"
 	"path"
@@ -63,13 +64,13 @@ func main() {
 
 func initGlobal() {
 	usr, err := user.Current()
-	perror(err)
+	perror(errors.Trace(err))
 
 	if len(configFile) == 0 {
 		configFile = path.Join(usr.HomeDir, ".work-reporter/config.toml")
 	}
 	cfg, err := NewConfigFromFile(configFile)
-	perror(err)
+	perror(errors.Trace(err))
 
 	globalCtx = context.Background()
 	config = cfg
@@ -91,7 +92,7 @@ func initGlobal() {
 	}
 
 	jiraClient, err = jira.NewClient(jiraTransport.Client(), config.Jira.Endpoint)
-	perror(err)
+	perror(errors.Trace(err))
 
 	// In our company, we use same user and password for Jira and Confluence.
 	if len(config.Confluence.User) == 0 {
@@ -109,5 +110,5 @@ func initGlobal() {
 	}
 
 	conflunceClient, err = jira.NewClient(confluenceTransport.Client(), config.Confluence.Endpoint)
-	perror(err)
+	perror(errors.Trace(err))
 }

@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	jira "github.com/andygrunwald/go-jira"
-	"github.com/spf13/cobra"
 	"strings"
+
+	jira "github.com/andygrunwald/go-jira"
+	"github.com/juju/errors"
+	"github.com/spf13/cobra"
 )
 
 func newVersionReleaseCommand() *cobra.Command {
@@ -53,7 +55,7 @@ func runVersionReleaseLinkCommandFunc(cmd *cobra.Command, args []string) {
 	linkIssues := config.IssueLinks
 	for _, linkIssue := range linkIssues {
 		err := linkRelatedJiraIssues(linkIssue.LinkTo, linkIssue.Labels, linkIssue.ReleaseVer)
-		perror(err)
+		perror(errors.Trace(err))
 	}
 }
 

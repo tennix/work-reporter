@@ -70,17 +70,17 @@ func getContentByTitle(space string, title string) Content {
 
 	apiEndpoint := "rest/api/content"
 	url, err := addOptions(apiEndpoint, opts)
-	perror(err)
+	perror(errors.Trace(err))
 
 	req, err := conflunceClient.NewRequest("GET", url, nil)
-	perror(err)
+	perror(errors.Trace(err))
 
 	res := struct {
 		Results []Content `json:"results"`
 	}{}
 
 	_, err = conflunceClient.Do(req, &res)
-	perror(err)
+	perror(errors.Trace(err))
 
 	if len(res.Results) == 0 {
 		return Content{}
@@ -93,11 +93,11 @@ func getContent(id string) Content {
 	apiEndpoint := fmt.Sprintf("rest/api/content/%s?expand=body.storage,version.number,space.key", id)
 
 	req, err := conflunceClient.NewRequest("GET", apiEndpoint, nil)
-	perror(err)
+	perror(errors.Trace(err))
 
 	var content Content
 	_, err = conflunceClient.Do(req, &content)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return content
 }
@@ -122,7 +122,7 @@ func createContent(space string, parentID string, title string, value string) Co
 
 	var respContent Content
 	_, err = conflunceClient.Do(req, &respContent)
-	perror(err)
+	perror(errors.Trace(err))
 	return respContent
 }
 
@@ -141,11 +141,11 @@ func updateContent(content Content, value string) Content {
 	apiEndpoint := "rest/api/content/" + content.Id
 
 	req, err := conflunceClient.NewRequest("PUT", apiEndpoint, &newContent)
-	perror(err)
+	perror(errors.Trace(err))
 
 	var respContent Content
 	_, err = conflunceClient.Do(req, &respContent)
-	perror(err)
+	perror(errors.Trace(err))
 
 	return respContent
 }
@@ -154,8 +154,8 @@ func deleteContent(id string) {
 	apiEndpoint := "rest/api/content/" + id
 
 	req, err := conflunceClient.NewRequest("DELETE", apiEndpoint, nil)
-	perror(err)
+	perror(errors.Trace(err))
 
 	_, err = conflunceClient.Do(req, nil)
-	perror(err)
+	perror(errors.Trace(err))
 }
