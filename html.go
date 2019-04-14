@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
+	"github.com/winkyao/go-jira"
 	"html"
 	"strings"
 )
@@ -45,6 +45,19 @@ func formatJiraIssueForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
 			<ac:parameter ac:name="key">%s</ac:parameter>
 	</ac:structured-macro></p>
 	`
+	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key))
+}
+
+func formatJiraIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
+	html := `
+<li>
+    <ac:structured-macro ac:name="jira" ac:schema-version="1">
+      <ac:parameter ac:name="server">%s</ac:parameter>
+      <ac:parameter ac:name="serverId">%s</ac:parameter>
+      <ac:parameter ac:name="key">%s</ac:parameter>
+    </ac:structured-macro>: %s
+</li>`
+
 	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key))
 }
 

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/winkyao/go-jira"
 )
 
 const (

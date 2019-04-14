@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	jira "github.com/andygrunwald/go-jira"
 	"github.com/spf13/cobra"
+	jira "github.com/winkyao/go-jira"
 	"strings"
 )
 

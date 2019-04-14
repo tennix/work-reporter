@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andygrunwald/go-jira"
 	"github.com/spf13/cobra"
+	"github.com/winkyao/go-jira"
 )
 
 const jiraLabelColorGrey = "Grey"
@@ -15,11 +15,20 @@ const jiraLabelColorYellow = "Yellow"
 const jiraLabelColorGreen = "Green"
 const jiraLabelColorBlue = "Blue"
 
+func newWeeklyDeadlineReportCommand() *cobra.Command {
+	m := &cobra.Command{
+		Use:   "dead-line-report",
+		Short: "Create Weekly Dead-Line-Report",
+		Run:   runWeelyDeadLineReportCommandFunc,
+	}
+	return m
+}
+
 func newWeeklyReportCommand() *cobra.Command {
 	m := &cobra.Command{
 		Use:   "report",
 		Short: "Create Weekly Report",
-		Run:   runWeelyReportCommandFunc,
+		Run:   runWeeklyReportCommandFunc,
 	}
 	return m
 }
@@ -38,12 +47,25 @@ func newWeeklyCommand() *cobra.Command {
 		Use:   "weekly",
 		Short: "Weely Tasks",
 	}
+	m.AddCommand(newWeeklyDeadlineReportCommand())
 	m.AddCommand(newWeeklyReportCommand())
-	//m.AddCommand(newRotateSprintCommand())
 	return m
 }
 
-func runWeelyReportCommandFunc(cmd *cobra.Command, args []string) {
+func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
+	var pageBody bytes.Buffer
+	formatPageBeginForHtmlOutput(&pageBody)
+
+	// TODO: make the query be configurable.
+	//	_ = queryJiraIssues(`assignee = "chenshuang@pingcap.com"  AND (updated >= -1w and resolution = Unresolved or  resolved >= -1w)
+	//and status not in (TODO,"To Do","WON'T FIX") ORDER BY updated`)
+	queryJiraIssues(`key = TIDB-2629`)
+	formatPageEndForHtmlOutput(&pageBody)
+
+	fmt.Println(pageBody.String())
+}
+
+func runWeelyDeadLineReportCommandFunc(cmd *cobra.Command, args []string) {
 	//boardID := getBoardID(config.Jira.Project, "scrum")
 	//lastSprint := getLatestPassedSprint(boardID)
 	//nextSprint := getNearestFutureSprint(boardID)

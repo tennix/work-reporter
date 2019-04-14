@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackutilsx"
+	"github.com/winkyao/go-jira"
 )
 
 // Use getSlackClient() to access it with lazy initialize feature.
