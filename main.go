@@ -7,10 +7,10 @@ import (
 	"os/user"
 	"path"
 
+	jira "github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
 	"github.com/ngaut/log"
 	"github.com/spf13/cobra"
-	jira "github.com/winkyao/go-jira"
 	"golang.org/x/oauth2"
 )
 

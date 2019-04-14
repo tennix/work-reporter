@@ -10,6 +10,14 @@
   version = "v0.3.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:2f16f8c5ba42d4081e2657731e9e3e0294da1a02d3a66cc2237b9c8ffefac73e"
+  name = "github.com/andygrunwald/go-jira"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "53c468062dcbcce3d44d6c031e3cb31292ffcc31"
+
+[[projects]]
   digest = "1:52ec55889de2c93a772ceba253313c12f65444aac61a11182d4d119ef97479e8"
   name = "github.com/fatih/structs"
   packages = ["."]
@@ -112,14 +120,6 @@
   version = "v1.0.5"
 
 [[projects]]
-  digest = "1:0c7354d90386838cb90d73e6d0ef9b632ca1226ee25eccce351cf21ab71de1c1"
-  name = "github.com/winkyao/go-jira"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "e2a9240a5cdecd666b9e2f7b5b20343022b4d467"
-  version = "1.6.0"
-
-[[projects]]
   branch = "master"
   digest = "1:d6b719875cf8091fbab38527d81d34e71f4521b9ee9ccfbd4a32cff2ac5af96e"
   name = "golang.org/x/net"
@@ -162,6 +162,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/BurntSushi/toml",
+    "github.com/andygrunwald/go-jira",
     "github.com/google/go-github/github",
     "github.com/google/go-querystring/query",
     "github.com/ngaut/log",
@@ -169,7 +170,6 @@
     "github.com/nlopes/slack/slackutilsx",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
-    "github.com/winkyao/go-jira",
     "golang.org/x/oauth2",
   ]
   solver-name = "gps-cdcl"

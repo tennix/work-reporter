@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/andygrunwald/go-jira"
 	"github.com/spf13/cobra"
-	"github.com/winkyao/go-jira"
 )
 
 const jiraLabelColorGrey = "Grey"

@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/andygrunwald/go-jira"
 	"github.com/google/go-github/github"
-	"github.com/winkyao/go-jira"
 	"html"
 	"strings"
 )
