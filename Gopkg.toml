@@ -25,6 +25,10 @@
 #   unused-packages = true
 
 [[constraint]]
+  name = "github.com/juju/errors"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/andygrunwald/go-jira"
   branch = "master"
 

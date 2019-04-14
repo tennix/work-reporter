@@ -9,12 +9,20 @@ import (
 	"strings"
 )
 
+const (
+	processIssueField = "customfield_11100"
+)
+
 func formatPageBeginForHtmlOutput(buf *bytes.Buffer) {
 	buf.WriteString(`<ac:layout>`)
 }
 
 func formatPageEndForHtmlOutput(buf *bytes.Buffer) {
 	buf.WriteString(`</ac:layout>`)
+}
+
+func formatHeadLineHtmlOutput(buf *bytes.Buffer, headlineTag string, headlineText string) {
+	buf.WriteString(fmt.Sprintf(`<%s>%s</%s>`, headlineTag, headlineText, headlineTag))
 }
 
 func formatSectionBeginForHtmlOutput(buf *bytes.Buffer) {
@@ -48,17 +56,74 @@ func formatJiraIssueForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
 	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key))
 }
 
-func formatJiraIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
+func getIssueProgressField(issue *jira.Issue) string {
+	processField, ok := issue.Fields.Unknowns[processIssueField]
+	if !ok {
+		return ""
+	}
+
+	if processFieldStr, ok := processField.(string); ok {
+		return processFieldStr
+	}
+
+	return ""
+}
+
+func formatJiraIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue, repeatChecker IssueRepeatChecker) {
+	issueType := strings.ToLower(issue.Fields.Type.Name)
+	switch issueType {
+	case "epic":
+		formatEpicIssueWithProgressForHtmlOutput(buf, issue, repeatChecker)
+	default:
+		formatNormalIssueWithProgressForHtmlOutput(buf, issue)
+	}
+}
+
+func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
 	html := `
-<li>
     <ac:structured-macro ac:name="jira" ac:schema-version="1">
       <ac:parameter ac:name="server">%s</ac:parameter>
       <ac:parameter ac:name="serverId">%s</ac:parameter>
       <ac:parameter ac:name="key">%s</ac:parameter>
-    </ac:structured-macro>: %s
-</li>`
+    </ac:structured-macro> %s`
 
-	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key))
+	progress := getIssueProgressField(issue)
+	if progress != "" {
+		progress = ": " + progress
+	}
+
+	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key, progress))
+}
+
+func formatUnorderedListIssuesForHtmlOutput(buf *bytes.Buffer, issues []jira.Issue, repeatChecker IssueRepeatChecker) {
+	if len(issues) == 0 {
+		return
+	}
+
+	// start unorderd list
+	buf.WriteString(`<ul>`)
+
+	for _, issue := range issues {
+		exists := repeatChecker.Check(issue.Key)
+		if exists {
+			continue
+		}
+		buf.WriteString(`<li>`)
+		formatJiraIssueWithProgressForHtmlOutput(buf, &issue, repeatChecker)
+		buf.WriteString(`</li>`)
+	}
+	buf.WriteString(`</ul>`)
+}
+
+func formatEpicIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue, repeatChecker IssueRepeatChecker) {
+	// format epic issue self.
+	formatNormalIssueWithProgressForHtmlOutput(buf, issue)
+
+	// format issues belongs to this epic.
+	// TODO: make jql this configurable.
+	issuesInEpic := queryJiraIssues(fmt.Sprintf(`"Epic Link" = %s AND %s`, issue.Key, config.Jira.WeeklyPersonalIssues))
+
+	formatUnorderedListIssuesForHtmlOutput(buf, issuesInEpic, repeatChecker)
 }
 
 func formatJiraIssueToExpandForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue, parentIssue *jira.Issue) {

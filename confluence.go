@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/google/go-querystring/query"
+	"github.com/juju/errors"
 )
 
 type Ancestor struct {
@@ -109,7 +110,7 @@ func createContent(space string, parentID string, title string, value string) Co
 
 	content.Space.Key = space
 	content.Ancestors = []Ancestor{
-		Ancestor{Id: parentID},
+		{Id: parentID},
 	}
 	content.Body.Storage.Value = value
 	content.Body.Storage.Representation = "storage"
@@ -117,7 +118,7 @@ func createContent(space string, parentID string, title string, value string) Co
 	apiEndpoint := "rest/api/content"
 
 	req, err := conflunceClient.NewRequest("POST", apiEndpoint, &content)
-	perror(err)
+	perror(errors.Trace(err))
 
 	var respContent Content
 	_, err = conflunceClient.Do(req, &respContent)

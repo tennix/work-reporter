@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/andygrunwald/go-jira"
@@ -52,17 +53,79 @@ func newWeeklyCommand() *cobra.Command {
 	return m
 }
 
-func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
+type JiraIssueArray []jira.Issue
+
+// collectEpicJiraIssue finds out all the epic issues.
+// first return value: epic issues
+// second return value: others issues
+func collectEpicJiraIssue(jiraIssues []jira.Issue) map[string]*JiraIssueArray {
+	collectIssueMap := make(map[string]*JiraIssueArray)
+	for _, issue := range jiraIssues {
+		issueType := strings.ToLower(issue.Fields.Type.Name)
+		issuesArr, ok := collectIssueMap[issueType]
+		if !ok {
+			issuesArr = &JiraIssueArray{}
+			collectIssueMap[issueType] = issuesArr
+		}
+
+		*issuesArr = append(*issuesArr, issue)
+	}
+
+	return collectIssueMap
+}
+
+type IssueRepeatChecker map[string]struct{}
+
+//
+func (ir IssueRepeatChecker) Check(key string) bool {
+	_, ok := ir[key]
+	if !ok {
+		ir[key] = struct{}{}
+	}
+
+	return ok
+}
+
+func createPersonalWeeklyReport(member Member, now time.Time) {
 	var pageBody bytes.Buffer
-	formatPageBeginForHtmlOutput(&pageBody)
+	formatHeadLineHtmlOutput(&pageBody, "h2", " Works of this week")
 
-	// TODO: make the query be configurable.
-	//	_ = queryJiraIssues(`assignee = "chenshuang@pingcap.com"  AND (updated >= -1w and resolution = Unresolved or  resolved >= -1w)
-	//and status not in (TODO,"To Do","WON'T FIX") ORDER BY updated`)
-	queryJiraIssues(`key = TIDB-2629`)
-	formatPageEndForHtmlOutput(&pageBody)
+	jiraIssues := queryJiraIssues(fmt.Sprintf(`assignee = "%s" AND %s`, member.Email, config.Jira.WeeklyPersonalIssues))
 
-	fmt.Println(pageBody.String())
+	repeatChecker := make(IssueRepeatChecker)
+	collectIssueMap := collectEpicJiraIssue(jiraIssues)
+	// first format epic, to make up repeatChecker.
+	epicIssues := collectIssueMap["epic"]
+	if epicIssues != nil {
+		formatHeadLineHtmlOutput(&pageBody, "h3", "Epic")
+		formatUnorderedListIssuesForHtmlOutput(&pageBody, *epicIssues, repeatChecker)
+	}
+
+	pageBody.WriteString("<br/>")
+	for issueType, issues := range collectIssueMap {
+		if issueType == "epic" || (issues != nil && len(*issues) == 0) {
+			continue
+		}
+		issueArr := *issues
+		formatHeadLineHtmlOutput(&pageBody, "h3", issueArr[0].Fields.Type.Name)
+		formatUnorderedListIssuesForHtmlOutput(&pageBody, issueArr, repeatChecker)
+		pageBody.WriteString("<br/>")
+	}
+
+	// create a new confluence page.
+	//fmt.Println(pageBody.String())
+	date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -7).Format("2006/01/02"), now.Format("2006/01/02"))
+	createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
+}
+
+func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
+	now := time.Now()
+
+	for _, team := range config.Teams {
+		for _, member := range team.Members {
+			createPersonalWeeklyReport(member, now)
+		}
+	}
 }
 
 func runWeelyDeadLineReportCommandFunc(cmd *cobra.Command, args []string) {
@@ -203,4 +266,28 @@ func createWeeklyReport(title string, value string) {
 	}
 
 	//sendToSlack("Weekly report for sprint %s is generated: %s%s", title, config.Confluence.Endpoint, c.Links.WebUI)
+}
+
+func createConfluencePath(space string, title string) {
+	c := getContentByTitle(space, title)
+	if c.Id != "" {
+		// path is exists.
+		return
+	}
+	parent := getContentByTitle(space, "Personal Weekly Report 2019")
+	c = createContent(space, parent.Id, title, "")
+}
+
+func createPersonalWeeklyReportToConfluence(date string, name string, body string) {
+	space := config.Confluence.Space
+	personalReportTitle := date + " " + name
+	c := getContentByTitle(space, personalReportTitle)
+	if c.Id != "" {
+		c = updateContent(c, body)
+	} else {
+		// create this week's path.
+		createConfluencePath(space, date)
+		parent := getContentByTitle(space, date)
+		c = createContent(space, parent.Id, personalReportTitle, body)
+	}
 }
