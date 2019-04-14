@@ -160,7 +160,7 @@ func runWeelyDeadLineReportCommandFunc(cmd *cobra.Command, args []string) {
 
 	now := time.Now()
 	title := fmt.Sprintf("%s SQL-Infra Due Dates", now.Format("2006-01-02"))
-	createWeeklyReport(title, body.String())
+	createWeeklyDueDateReport(title, body.String())
 }
 
 func runRotateSprintCommandFunc(cmd *cobra.Command, args []string) {
@@ -254,14 +254,14 @@ func genWeeklyReportIssuesPRs(buf *bytes.Buffer, start, end string) {
 	formatSectionEndForHtmlOutput(buf)
 }
 
-func createWeeklyReport(title string, value string) {
+func createWeeklyDueDateReport(title string, value string) {
 	space := config.Confluence.Space
 	c := getContentByTitle(space, title)
 
 	if c.Id != "" {
 		c = updateContent(c, value)
 	} else {
-		parent := getContentByTitle(space, config.Confluence.WeeklyPath)
+		parent := getContentByTitle(space, config.Confluence.WeeklyDueDatePath)
 		c = createContent(space, parent.Id, title, value)
 	}
 
@@ -274,7 +274,7 @@ func createConfluencePath(space string, title string) {
 		// path is exists.
 		return
 	}
-	parent := getContentByTitle(space, "Personal Weekly Report 2019")
+	parent := getContentByTitle(space, config.Confluence.WeeklyPath)
 	c = createContent(space, parent.Id, title, "")
 }
 

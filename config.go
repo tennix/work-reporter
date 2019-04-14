@@ -45,8 +45,9 @@ type Confluence struct {
 	Password string `toml:"password"`
 	Endpoint string `toml:"endpoint"`
 
-	Space      string `toml:"space"`
-	WeeklyPath string `toml:"weekly-path"`
+	Space             string `toml:"space"`
+	WeeklyPath        string `toml:"weekly-path"`
+	WeeklyDueDatePath string `toml:"weekly-due-date-path"`
 }
 
 type IssueLink struct {
