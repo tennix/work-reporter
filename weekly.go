@@ -280,7 +280,7 @@ func createConfluencePath(space string, title string) {
 
 func createPersonalWeeklyReportToConfluence(date string, name string, body string) {
 	space := config.Confluence.Space
-	personalReportTitle := date + " " + name
+	personalReportTitle := name + " " + date
 	c := getContentByTitle(space, personalReportTitle)
 	if c.Id != "" {
 		c = updateContent(c, body)
