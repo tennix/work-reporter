@@ -98,24 +98,24 @@ func createPersonalWeeklyReport(member Member, now time.Time) {
 	epicIssues := collectIssueMap["epic"]
 	if epicIssues != nil {
 		formatHeadLineHtmlOutput(&pageBody, "h3", "Epic")
-		formatUnorderedListIssuesForHtmlOutput(&pageBody, *epicIssues, repeatChecker)
+		formatUnorderedListIssuesForHtmlOutput(&pageBody, nil, *epicIssues, repeatChecker)
+		pageBody.WriteString("<br/>")
 	}
 
-	pageBody.WriteString("<br/>")
 	for issueType, issues := range collectIssueMap {
 		if issueType == "epic" || (issues != nil && len(*issues) == 0) {
 			continue
 		}
 		issueArr := *issues
 		formatHeadLineHtmlOutput(&pageBody, "h3", issueArr[0].Fields.Type.Name)
-		formatUnorderedListIssuesForHtmlOutput(&pageBody, issueArr, repeatChecker)
+		formatUnorderedListIssuesForHtmlOutput(&pageBody, nil, issueArr, repeatChecker)
 		pageBody.WriteString("<br/>")
 	}
 
 	// create a new confluence page.
-	//fmt.Println(pageBody.String())
-	date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
-	createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
+	fmt.Println(pageBody.String())
+	//date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
+	//createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
 }
 
 func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
