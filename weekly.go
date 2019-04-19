@@ -113,9 +113,9 @@ func createPersonalWeeklyReport(member Member, now time.Time) {
 	}
 
 	// create a new confluence page.
-	fmt.Println(pageBody.String())
-	//date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
-	//createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
+	//fmt.Println(pageBody.String())
+	date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
+	createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
 }
 
 func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
