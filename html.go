@@ -202,7 +202,7 @@ func formatEpicIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Iss
 
 	// format issues belongs to this epic.
 	// TODO: make jql this configurable.
-	issuesInEpic := queryJiraIssues(fmt.Sprintf(`"Epic Link" = %s AND %s`, issue.Key, config.Jira.WeeklyPersonalIssues))
+	issuesInEpic := queryJiraIssuesWithOptions(fmt.Sprintf(`"Epic Link" = %s AND %s`, issue.Key, config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
 
 	formatUnorderedListIssuesForHtmlOutput(buf, issue, issuesInEpic, repeatChecker)
 }
