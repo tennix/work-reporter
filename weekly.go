@@ -86,11 +86,43 @@ func (ir IssueRepeatChecker) Check(key string) bool {
 	return ok
 }
 
+var allFieldsOpts jira.SearchOptions = jira.SearchOptions{
+	MaxResults: 1000,
+	Fields:     []string{"*all"},
+}
+
+// duedate2EstimateSeconds convert duedate to seconds with the same unit as jira time tracking.
+// As default, jira time tracking estimated 1d is equal to 8h.
+func duedate2EstimateSeconds(duedate time.Time, now time.Time) int {
+	days := duedate.Sub(now).Hours() / 24.0
+	seconds := days * float64(config.Jira.TimeTrackingDayHours) * 3600
+	return int(seconds)
+}
+
+func findNextWeekIssues(member Member, now time.Time) []jira.Issue {
+	// Find all duedate less than 7 days.
+	nextWeekIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND duedate <= 7d AND status not in (%s)`, member.Email, config.Jira.NonFinishedStatus), &allFieldsOpts)
+	remainingMorethan7dIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND remainingEstimate > 7d AND duedate > 7d AND priority >= High AND status not in (%s)`, member.Email, config.Jira.NonFinishedStatus), &allFieldsOpts)
+
+	for _, issue := range remainingMorethan7dIssues {
+		if issue.Fields.TimeTracking == nil {
+			continue
+		}
+		dueDate := time.Time(issue.Fields.Duedate)
+		if issue.Fields.TimeTracking.RemainingEstimateSeconds >= duedate2EstimateSeconds(dueDate, now) {
+			// we need to handle this job in the next week.
+			nextWeekIssues = append(nextWeekIssues, issue)
+		}
+	}
+
+	return nextWeekIssues
+}
+
 func createPersonalWeeklyReport(member Member, now time.Time) {
 	var pageBody bytes.Buffer
-	formatHeadLineHtmlOutput(&pageBody, "h2", " Works of this week")
+	formatHeadLineHtmlOutput(&pageBody, "h2", "Works of this week")
 
-	jiraIssues := queryJiraIssues(fmt.Sprintf(`assignee = "%s" AND %s`, member.Email, config.Jira.WeeklyPersonalIssues))
+	jiraIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND %s`, member.Email, config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
 
 	repeatChecker := make(IssueRepeatChecker)
 	collectIssueMap := collectEpicJiraIssue(jiraIssues)
@@ -111,6 +143,13 @@ func createPersonalWeeklyReport(member Member, now time.Time) {
 		formatUnorderedListIssuesForHtmlOutput(&pageBody, nil, issueArr, repeatChecker)
 		pageBody.WriteString("<br/>")
 	}
+
+	// Next week work plans
+	formatHeadLineHtmlOutput(&pageBody, "h2", "Next week plans")
+
+	nextWeekIssues := findNextWeekIssues(member, now)
+	repeatChecker = make(IssueRepeatChecker)
+	formatNextWeekPlansForHtmlOutput(&pageBody, nextWeekIssues, repeatChecker)
 
 	// create a new confluence page.
 	//fmt.Println(pageBody.String())
@@ -225,7 +264,7 @@ func genWeeklyReportDuedate(buf *bytes.Buffer) {
 </ac:structured-macro>
 `
 
-	for _, member := range allMemberEmals {
+	for _, member := range allSQLInfraMemberEmals {
 		jqlQuery := fmt.Sprintf(`assignee = %v AND duedate &lt; now() AND status not in (%s)`, member, stopStatus)
 		buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, jqlQuery))
 	}

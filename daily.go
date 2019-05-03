@@ -60,7 +60,7 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	//buf.WriteString("\n")
 
 	collector := make(map[string]*GithubItem)
-	for _, member := range allMembers {
+	for _, member := range allSQLInfraMembers {
 		mentionedPRs := getPullReuestsMentioned(start, nil, member)
 		collectMentionsPR(collector, member, mentionedPRs)
 	}
@@ -69,7 +69,7 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	formatCollectMentionsPRForSlackOutput(&buf, collector)
 	buf.WriteString("\n")
 
-	members := strings.Join(allMemberEmals, ",")
+	members := strings.Join(allSQLInfraMemberEmals, ",")
 	dailyIssues := queryJiraIssues(fmt.Sprintf(`assignee in (%v)  AND updated >= -1d ORDER BY assignee`, members))
 	formatSectionForSlackOutput(&buf, "Team JIRA Issue", "Updated in last 24 hours")
 	formatJiraIssuesForSlackOutput(&buf, dailyIssues)

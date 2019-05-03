@@ -22,6 +22,8 @@ type Jira struct {
 	OnCall               string `toml:"oncall"`
 	NonProcessStatus     string `toml:"non-process-status"`
 	WeeklyPersonalIssues string `toml:"weekly-personal-issues-jql"`
+	NonFinishedStatus    string `toml:"non-finished-status"`
+	TimeTrackingDayHours int    `toml:"timetracking-day-hours"`
 }
 
 type Member struct {

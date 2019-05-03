@@ -81,7 +81,7 @@ func formatGitHubIssueForSlackOutput(issue github.Issue) string {
 	isFromTeam := false
 	login := issue.GetUser().GetLogin()
 
-	for _, id := range allMembers {
+	for _, id := range allSQLInfraMembers {
 		if strings.EqualFold(id, login) {
 			isFromTeam = true
 			break
@@ -134,7 +134,7 @@ func formatGithubMentionsPRForSlackOutput(item *GithubItem) string {
 	isFromTeam := false
 	login := issue.GetUser().GetLogin()
 
-	for _, id := range allMembers {
+	for _, id := range allSQLInfraMembers {
 		if strings.EqualFold(id, login) {
 			isFromTeam = true
 			break

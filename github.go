@@ -14,8 +14,8 @@ import (
 
 var repoQuery string
 
-var allMembers []string
-var allMemberEmals []string
+var allSQLInfraMembers []string
+var allSQLInfraMemberEmals []string
 
 var github2Email map[string]string
 
@@ -133,8 +133,11 @@ func initTeamMembers() {
 	github2Email = make(map[string]string)
 	for _, team := range config.Teams {
 		for _, member := range team.Members {
-			allMembers = append(allMembers, member.Github)
-			allMemberEmals = append(allMemberEmals, strconv.Quote(member.Email))
+			if team.Name == "SQL-Infra" {
+				allSQLInfraMembers = append(allSQLInfraMembers, member.Github)
+				allSQLInfraMemberEmals = append(allSQLInfraMemberEmals, strconv.Quote(member.Email))
+			}
+
 			github2Email[member.Github] = member.Email
 		}
 	}

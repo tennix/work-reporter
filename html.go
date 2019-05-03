@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-github/github"
 	"html"
 	"strings"
+	"time"
 )
 
 const (
@@ -79,6 +80,59 @@ func formatJiraIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Issu
 	}
 }
 
+func getThisWeekWorkLogs(issue *jira.Issue) []jira.WorklogRecord {
+	if issue.Fields.Worklog == nil {
+		return nil
+	}
+
+	allWorklogs := issue.Fields.Worklog.Worklogs
+	if len(allWorklogs) == 0 {
+		return nil
+	}
+	now := time.Now()
+	workLogs := make([]jira.WorklogRecord, 0, len(allWorklogs))
+	for i := len(allWorklogs) - 1; i >= 0; i-- {
+		if now.Sub(time.Time(*allWorklogs[i].Updated)) > 7*24*time.Hour {
+			break
+		}
+		workLogs = append(workLogs, allWorklogs[i])
+	}
+	return workLogs
+}
+
+func lastestThisWeekWorkLogs(issue *jira.Issue) *jira.WorklogRecord {
+	if issue.Fields.Worklog == nil {
+		return nil
+	}
+
+	allWorklogs := issue.Fields.Worklog.Worklogs
+	if len(allWorklogs) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	lastestWorkLog := allWorklogs[len(allWorklogs)-1]
+	if now.Sub(time.Time(*lastestWorkLog.Updated)) > 7*24*time.Hour {
+		return nil
+	}
+	return &lastestWorkLog
+}
+
+func formatWorkLogForHtmlOutput(worklog *jira.WorklogRecord) string {
+	return worklog.Comment
+}
+
+func formatNormalIssueForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
+	html := `
+    <ac:structured-macro ac:name="jira" ac:schema-version="1">
+      <ac:parameter ac:name="server">%s</ac:parameter>
+      <ac:parameter ac:name="serverId">%s</ac:parameter>
+      <ac:parameter ac:name="key">%s</ac:parameter>
+    </ac:structured-macro>`
+
+	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key))
+}
+
 func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue, issue *jira.Issue) {
 	html := `
     <ac:structured-macro ac:name="jira" ac:schema-version="1">
@@ -87,15 +141,19 @@ func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Is
       <ac:parameter ac:name="key">%s</ac:parameter>
     </ac:structured-macro> %s`
 
-	var assignee string
+	var progress string
 	if epic != nil && epic.Fields.Assignee.Key != issue.Fields.Assignee.Key {
-		assignee = fmt.Sprintf("@%s ", issue.Fields.Assignee.DisplayName)
+		assignee := fmt.Sprintf("@%s ", issue.Fields.Assignee.DisplayName)
+		progress = assignee
 	}
-	progress := getIssueProgressField(issue)
-	if progress != "" || assignee != "" {
-		progress = ": " + assignee + progress
+	workLog := lastestThisWeekWorkLogs(issue)
+	if workLog != nil {
+		progress = progress + formatWorkLogForHtmlOutput(workLog)
 	}
 
+	if len(progress) != 0 {
+		progress = fmt.Sprintf(": %s", progress)
+	}
 	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key, progress))
 }
 
@@ -114,6 +172,25 @@ func formatUnorderedListIssuesForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue,
 		}
 		buf.WriteString(`<li>`)
 		formatJiraIssueWithProgressForHtmlOutput(buf, epic, &issue, repeatChecker)
+		buf.WriteString(`</li>`)
+	}
+	buf.WriteString(`</ul>`)
+}
+
+func formatNextWeekPlansForHtmlOutput(buf *bytes.Buffer, issues []jira.Issue, repeatChecker IssueRepeatChecker) {
+	if len(issues) == 0 {
+		return
+	}
+
+	// start unorderd list
+	buf.WriteString(`<ul>`)
+	for _, issue := range issues {
+		exists := repeatChecker.Check(issue.Key)
+		if exists {
+			continue
+		}
+		buf.WriteString(`<li>`)
+		formatNormalIssueWithProgressForHtmlOutput(buf, nil, &issue)
 		buf.WriteString(`</li>`)
 	}
 	buf.WriteString(`</ul>`)
@@ -173,7 +250,7 @@ func formatGitHubIssueForHtmlOutput(issue github.Issue) string {
 	isFromTeam := false
 	login := issue.GetUser().GetLogin()
 
-	for _, id := range allMembers {
+	for _, id := range allSQLInfraMembers {
 		if strings.EqualFold(id, login) {
 			isFromTeam = true
 			break

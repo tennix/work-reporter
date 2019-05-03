@@ -199,6 +199,25 @@ func queryJiraIssues(jql string) []jira.Issue {
 	issues, _, err := jiraClient.Issue.Search(jql, &jira.SearchOptions{
 		MaxResults: 1000,
 	})
-	perror(errors.Annotate(err, fmt.Sprintf("jql:%s", jql)))
+	if err != nil {
+		perror(errors.Annotate(err, fmt.Sprintf("jql:%s", jql)))
+	}
 	return issues
+}
+
+func queryJiraIssuesWithOptions(jql string, opts *jira.SearchOptions) []jira.Issue {
+	issues, _, err := jiraClient.Issue.Search(jql, opts)
+	if err != nil {
+		perror(errors.Annotate(err, fmt.Sprintf("jql:%s", jql)))
+	}
+	return issues
+}
+
+func getIssueWorklogs(key string) []jira.WorklogRecord {
+	workLogs, _, err := jiraClient.Issue.GetWorklogs(key)
+	if err != nil {
+		perror(errors.Annotate(err, fmt.Sprintf("issue key:%s", key)))
+	}
+
+	return workLogs.Worklogs
 }
