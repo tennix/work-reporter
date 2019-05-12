@@ -142,7 +142,7 @@ func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Is
     </ac:structured-macro> %s`
 
 	var progress string
-	if epic != nil && epic.Fields.Assignee.Key != issue.Fields.Assignee.Key {
+	if epic != nil && epic.Fields.Assignee != nil && issue.Fields.Assignee != nil && epic.Fields.Assignee.Key != issue.Fields.Assignee.Key {
 		assignee := fmt.Sprintf("@%s ", issue.Fields.Assignee.DisplayName)
 		progress = assignee
 	}
@@ -164,7 +164,6 @@ func formatUnorderedListIssuesForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue,
 
 	// start unorderd list
 	buf.WriteString(`<ul>`)
-
 	for _, issue := range issues {
 		exists := repeatChecker.Check(issue.Key)
 		if exists {
@@ -174,6 +173,7 @@ func formatUnorderedListIssuesForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue,
 		formatJiraIssueWithProgressForHtmlOutput(buf, epic, &issue, repeatChecker)
 		buf.WriteString(`</li>`)
 	}
+
 	buf.WriteString(`</ul>`)
 }
 
@@ -202,7 +202,18 @@ func formatEpicIssueWithProgressForHtmlOutput(buf *bytes.Buffer, issue *jira.Iss
 
 	// format issues belongs to this epic.
 	// TODO: make jql this configurable.
-	issuesInEpic := queryJiraIssuesWithOptions(fmt.Sprintf(`"Epic Link" = %s AND %s`, issue.Key, config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
+	// format sub-tasks in epic.
+	var issuesInEpic []jira.Issue
+	if len(issue.Fields.Subtasks) > 0 {
+		subKeys := make([]string, 0, len(issue.Fields.Subtasks))
+		for _, subtask := range issue.Fields.Subtasks {
+			subKeys = append(subKeys, subtask.Key)
+		}
+		issuesInEpic = queryJiraIssuesWithOptions(fmt.Sprintf(`"Epic Link" = %s AND %s OR (key in (%v) AND %s)`,
+			issue.Key, config.Jira.WeeklyPersonalIssues, strings.Join(subKeys, ","), config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
+	} else {
+		issuesInEpic = queryJiraIssuesWithOptions(fmt.Sprintf(`"Epic Link" = %s AND %s`, issue.Key, config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
+	}
 
 	formatUnorderedListIssuesForHtmlOutput(buf, issue, issuesInEpic, repeatChecker)
 }
