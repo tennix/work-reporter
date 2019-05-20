@@ -101,8 +101,8 @@ func duedate2EstimateSeconds(duedate time.Time, now time.Time) int {
 
 func findNextWeekIssues(member Member, now time.Time) []jira.Issue {
 	// Find all duedate less than 7 days.
-	nextWeekIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND duedate <= 7d AND status not in (%s)`, member.Email, config.Jira.FinishedStatus), &allFieldsOpts)
-	remainingMorethan7dIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND remainingEstimate > 7d AND duedate > 7d AND priority >= High AND status not in (%s)`, member.Email, config.Jira.FinishedStatus), &allFieldsOpts)
+	nextWeekIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND duedate <= 7d AND statusCategory = indeterminate`, member.Email), &allFieldsOpts)
+	remainingMorethan7dIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND remainingEstimate > 7d AND duedate > 7d AND priority >= High AND statusCategory = indeterminate`, member.Email), &allFieldsOpts)
 
 	for _, issue := range remainingMorethan7dIssues {
 		if issue.Fields.TimeTracking == nil {

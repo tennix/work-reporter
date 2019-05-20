@@ -13,17 +13,17 @@ type Slack struct {
 }
 
 type Jira struct {
-	User                 string `toml:"user"`
-	Password             string `toml:"password"`
-	Endpoint             string `toml:"endpoint"`
-	ServerID             string `toml:"server-id"`
-	Server               string `toml:"server"`
-	Project              string `toml:"project"`
-	OnCall               string `toml:"oncall"`
-	NonProcessStatus     string `toml:"non-process-status"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	Endpoint string `toml:"endpoint"`
+	ServerID string `toml:"server-id"`
+	Server   string `toml:"server"`
+	Project  string `toml:"project"`
+	OnCall   string `toml:"oncall"`
+	//NonProcessStatus     string `toml:"non-process-status"`
 	WeeklyPersonalIssues string `toml:"weekly-personal-issues-jql"`
-	FinishedStatus       string `toml:"finished-status"`
-	TimeTrackingDayHours int    `toml:"timetracking-day-hours"`
+	//FinishedStatus       string `toml:"finished-status"`
+	TimeTrackingDayHours int `toml:"timetracking-day-hours"`
 }
 
 type Member struct {
