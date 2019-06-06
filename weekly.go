@@ -322,7 +322,7 @@ func createPersonalWeeklyReportToConfluence(date string, name string, body strin
 	personalReportTitle := name + " " + date
 	c := getContentByTitle(space, personalReportTitle)
 	if c.Id != "" {
-		c = updateContent(c, body)
+		// c = updateContent(c, body)
 	} else {
 		// create this week's path.
 		createConfluencePath(space, date)
