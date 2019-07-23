@@ -78,10 +78,10 @@ func runDailyCommandFunc(cmd *cobra.Command, args []string) {
 	// TODO: make the filter syntax configurable in the config file.
 	// nonProcessStatus := `"Job Closed", 完成, TODO, "To Do", DUPLICATED, Blocked, Closed, Paused, Resolved, "CAN'T REPRODUCE", Cancelled, "WON'T FIX"`
 	//nonProcessStatus := config.Jira.NonProcessStatus
-	dueDateIssues := queryJiraIssues(fmt.Sprintf(`statusCategory = indeterminate AND assignee in (%v) and duedate <= 2d  ORDER BY assignee`, members))
-	formatSectionForSlackOutput(&buf, "Getting To Due Date JIRA Issue", "The due date will be less than 2 day")
-	formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
-	buf.WriteString("\n")
+	//dueDateIssues := queryJiraIssues(fmt.Sprintf(`statusCategory = indeterminate AND assignee in (%v) and duedate <= 2d  ORDER BY assignee`, members))
+	//formatSectionForSlackOutput(&buf, "Getting To Due Date JIRA Issue", "The due date will be less than 2 day")
+	//formatJiraIssuesForSlackOutput(&buf, dueDateIssues)
+	//buf.WriteString("\n")
 
 	//processingIssues := queryJiraIssues(fmt.Sprintf(`status not in (%v) AND assignee in (%v) ORDER BY assignee`, nonProcessStatus, members))
 	//formatSectionForSlackOutput(&buf, "JIRA Issue Without Due Date", "Please add due date to processing JIRA issues")
