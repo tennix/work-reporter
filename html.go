@@ -134,7 +134,7 @@ func formatNormalIssueForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue) {
 }
 
 func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue, issue *jira.Issue) {
-	html := `
+	htmlOutput := `
     <ac:structured-macro ac:name="jira" ac:schema-version="1">
       <ac:parameter ac:name="server">%s</ac:parameter>
       <ac:parameter ac:name="serverId">%s</ac:parameter>
@@ -152,9 +152,9 @@ func formatNormalIssueWithProgressForHtmlOutput(buf *bytes.Buffer, epic *jira.Is
 	}
 
 	if len(progress) != 0 {
-		progress = fmt.Sprintf(": %s", progress)
+		progress = fmt.Sprintf(": %s", html.EscapeString(progress))
 	}
-	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, issue.Key, progress))
+	buf.WriteString(fmt.Sprintf(htmlOutput, config.Jira.Server, config.Jira.ServerID, issue.Key, progress))
 }
 
 func formatUnorderedListIssuesForHtmlOutput(buf *bytes.Buffer, epic *jira.Issue, issues []jira.Issue, repeatChecker IssueRepeatChecker) {
