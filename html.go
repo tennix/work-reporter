@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/andygrunwald/go-jira"
-	"github.com/google/go-github/github"
 	"html"
 	"strings"
 	"time"
+
+	"github.com/andygrunwald/go-jira"
+	"github.com/google/go-github/github"
 )
 
 const (
@@ -258,15 +259,15 @@ func formatJiraIssueToExpandForHtmlOutput(buf *bytes.Buffer, issue *jira.Issue, 
 }
 
 func formatGitHubIssueForHtmlOutput(issue github.Issue) string {
-	isFromTeam := false
-	login := issue.GetUser().GetLogin()
+	// isFromTeam := false
+	// login := issue.GetUser().GetLogin()
 
-	for _, id := range allSQLInfraMembers {
-		if strings.EqualFold(id, login) {
-			isFromTeam = true
-			break
-		}
-	}
+	// for _, id := range allSQLInfraMembers {
+	// 	if strings.EqualFold(id, login) {
+	// 		isFromTeam = true
+	// 		break
+	// 	}
+	// }
 
 	var labelColor = jiraLabelColorGrey
 	if issue.GetState() == "closed" {
@@ -288,9 +289,9 @@ func formatGitHubIssueForHtmlOutput(issue github.Issue) string {
 		}
 	}
 
-	if !isFromTeam {
-		s += " " + formatLabelForHtmlOutput("Community", jiraLabelColorBlue)
-	}
+	// if !isFromTeam {
+	// 	s += " " + formatLabelForHtmlOutput("Community", jiraLabelColorBlue)
+	// }
 
 	return s
 }

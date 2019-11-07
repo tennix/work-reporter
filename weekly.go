@@ -101,7 +101,8 @@ func duedate2EstimateSeconds(duedate time.Time, now time.Time) int {
 
 func findNextWeekIssues(member Member, now time.Time) []jira.Issue {
 	// Find all duedate less than 7 days.
-	nextWeekIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND duedate <= 7d AND statusCategory = indeterminate`, member.Email), &allFieldsOpts)
+	jql := fmt.Sprintf(`assignee = "%s" AND duedate <= 7d AND statusCategory = indeterminate`, member.Email)
+	nextWeekIssues := queryJiraIssuesWithOptions(jql, &allFieldsOpts)
 	remainingMorethan7dIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND remainingEstimate > 7d AND duedate > 7d AND priority >= High AND statusCategory = indeterminate`, member.Email), &allFieldsOpts)
 
 	for _, issue := range remainingMorethan7dIssues {
@@ -118,9 +119,13 @@ func findNextWeekIssues(member Member, now time.Time) []jira.Issue {
 	return nextWeekIssues
 }
 
-func createPersonalWeeklyReport(member Member, now time.Time) {
-	var pageBody bytes.Buffer
-	formatHeadLineHtmlOutput(&pageBody, "h2", "Works of this week")
+func createPersonalWeeklyReport(pageBody *bytes.Buffer, member Member, now time.Time) {
+	user := getUser(member.Email)
+	pageBody.WriteString("<h1><ac:link>")
+	pageBody.WriteString(fmt.Sprintf("<ri:user ri:userkey=\"%s\"/>", user.UserKey))
+	pageBody.WriteString("</ac:link></h1>")
+
+	formatHeadLineHtmlOutput(pageBody, "h2", "This Week:")
 
 	jiraIssues := queryJiraIssuesWithOptions(fmt.Sprintf(`assignee = "%s" AND %s`, member.Email, config.Jira.WeeklyPersonalIssues), &allFieldsOpts)
 
@@ -128,9 +133,15 @@ func createPersonalWeeklyReport(member Member, now time.Time) {
 	collectIssueMap := collectEpicJiraIssue(jiraIssues)
 	// first format epic, to make up repeatChecker.
 	epicIssues := collectIssueMap["epic"]
+
+	formatHeadLineHtmlOutput(pageBody, "h3", "Jira Issue Updates")
+	if epicIssues == nil && len(collectIssueMap) == 0 {
+		pageBody.WriteString("<p><i>None</i></p>")
+	}
+
 	if epicIssues != nil {
-		formatHeadLineHtmlOutput(&pageBody, "h3", "Epic")
-		formatUnorderedListIssuesForHtmlOutput(&pageBody, nil, *epicIssues, repeatChecker)
+		formatHeadLineHtmlOutput(pageBody, "h4", "Epic")
+		formatUnorderedListIssuesForHtmlOutput(pageBody, nil, *epicIssues, repeatChecker)
 		pageBody.WriteString("<br/>")
 	}
 
@@ -139,32 +150,40 @@ func createPersonalWeeklyReport(member Member, now time.Time) {
 			continue
 		}
 		issueArr := *issues
-		formatHeadLineHtmlOutput(&pageBody, "h3", issueArr[0].Fields.Type.Name)
-		formatUnorderedListIssuesForHtmlOutput(&pageBody, nil, issueArr, repeatChecker)
+		formatHeadLineHtmlOutput(pageBody, "h4", issueArr[0].Fields.Type.Name)
+		formatUnorderedListIssuesForHtmlOutput(pageBody, nil, issueArr, repeatChecker)
 		pageBody.WriteString("<br/>")
 	}
 
+	genPullRequestsReport(pageBody, member.Github, now.AddDate(0, 0, -6).Format("2006-01-02"), now.Format("2006-01-02"))
+
 	// Next week work plans
-	formatHeadLineHtmlOutput(&pageBody, "h2", "Next week plans")
+	formatHeadLineHtmlOutput(pageBody, "h2", "Next Week:")
 
 	nextWeekIssues := findNextWeekIssues(member, now)
 	repeatChecker = make(IssueRepeatChecker)
-	formatNextWeekPlansForHtmlOutput(&pageBody, nextWeekIssues, repeatChecker)
+	formatNextWeekPlansForHtmlOutput(pageBody, nextWeekIssues, repeatChecker)
 
 	// create a new confluence page.
 	//fmt.Println(pageBody.String())
-	date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
-	createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
+	// date := fmt.Sprintf("%s ~ %s", now.AddDate(0, 0, -6).Format("2006/01/02"), now.Format("2006/01/02"))
+
+	// createPersonalWeeklyReportToConfluence(date, member.Name, pageBody.String())
+
 }
 
 func runWeeklyReportCommandFunc(cmd *cobra.Command, args []string) {
 	now := time.Now()
-
+	var pageBody = new(bytes.Buffer)
 	for _, team := range config.Teams {
 		for _, member := range team.Members {
-			createPersonalWeeklyReport(member, now)
+			createPersonalWeeklyReport(pageBody, member, now)
+			pageBody.WriteString("<hr/>")
 		}
 	}
+
+	c := createWeeklyReportToConfluence(now, pageBody)
+	sendToSlack("Weekly report has been generated %s%s, please manually edit it to add/fix missing/wrong issues.", config.Confluence.Endpoint, c.Links.WebUI)
 }
 
 func runWeelyDeadLineReportCommandFunc(cmd *cobra.Command, args []string) {
@@ -236,17 +255,27 @@ func genWeeklyUserPage(buf *bytes.Buffer, m Member, curSprint jira.Sprint, nextS
 	buf.WriteString(fmt.Sprintf("\n<h2>%s</h2>\n", m.Name))
 	buf.WriteString("\n<h3>Work</h3>\n")
 	buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, sprintID, m.Email))
-	genReviewPullRequests(buf, m.Github, curSprint.StartDate.Format(dayFormat), curSprint.EndDate.Format(dayFormat))
+	genPullRequestsReport(buf, m.Github, curSprint.StartDate.Format(dayFormat), curSprint.EndDate.Format(dayFormat))
 	if nextSprintID > 0 {
 		buf.WriteString("\n<h3>Next Week</h3>\n")
 		buf.WriteString(fmt.Sprintf(html, config.Jira.Server, config.Jira.ServerID, nextSprintID, m.Email))
 	}
 }
 
-func genReviewPullRequests(buf *bytes.Buffer, user, start, end string) {
-	buf.WriteString("<h3>Review PR</h3>")
-	issues := getReviewPullRequests(user, start, &end)
-	formatGitHubIssuesForHtmlOutput(buf, issues)
+func genPullRequestsReport(buf *bytes.Buffer, user, start, end string) {
+	buf.WriteString("<h3>GitHub PR updates</h3>")
+	prs := getCreatedPullRequests(user, start, &end)
+	reviewPRs := getReviewPullRequests(user, start, &end)
+
+	if len(prs) == 0 && len(reviewPRs) == 0 {
+		buf.WriteString("<p><i>None</i></p>")
+		return
+	}
+
+	buf.WriteString("<h4>PR</h4>")
+	formatGitHubIssuesForHtmlOutput(buf, prs)
+	buf.WriteString("<h4>Review PR</h4>")
+	formatGitHubIssuesForHtmlOutput(buf, reviewPRs)
 }
 
 func genWeeklyReportDuedate(buf *bytes.Buffer) {
@@ -313,6 +342,7 @@ func createConfluencePath(space string, title string) {
 		// path is exists.
 		return
 	}
+
 	parent := getContentByTitle(space, config.Confluence.WeeklyPath)
 	c = createContent(space, parent.Id, title, "")
 }
@@ -329,4 +359,21 @@ func createPersonalWeeklyReportToConfluence(date string, name string, body strin
 		parent := getContentByTitle(space, date)
 		c = createContent(space, parent.Id, personalReportTitle, body)
 	}
+}
+
+func createWeeklyReportToConfluence(now time.Time, pageBody *bytes.Buffer) Content {
+	weeklyTitle := fmt.Sprintf("%s ~~ %s", now.AddDate(0, 0, -6).Format("2006-01-02"), now.Format("2006-01-02"))
+	space := config.Confluence.Space
+	c := getContentByTitle(space, weeklyTitle)
+
+	monthTitle := now.Format("2006-01")
+	createConfluencePath(space, monthTitle)
+	if c.Id != "" {
+		c = updateContent(c, pageBody.String())
+	} else {
+		createConfluencePath(space, monthTitle)
+		parent := getContentByTitle(space, monthTitle)
+		c = createContent(space, parent.Id, weeklyTitle, pageBody.String())
+	}
+	return c
 }

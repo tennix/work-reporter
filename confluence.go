@@ -37,6 +37,12 @@ type Content struct {
 	Ancestors []Ancestor `json:"ancestors,omitempty"`
 }
 
+type User struct {
+	Type     string `json:"type,omitempty"`
+	Username string `json:"username,omitempty"`
+	UserKey  string `json:"userKey,omitempty"`
+}
+
 func addOptions(s string, opt interface{}) (string, error) {
 	v := reflect.ValueOf(opt)
 	if v.Kind() == reflect.Ptr && v.IsNil() {
@@ -55,6 +61,18 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 	u.RawQuery = qs.Encode()
 	return u.String(), nil
+}
+
+func getUser(username string) User {
+	apiEndpoint := "rest/api/user"
+	url := fmt.Sprintf("%s?username=%s", apiEndpoint, username)
+	req, err := conflunceClient.NewRequest("GET", url, nil)
+	perror(errors.Trace(err))
+	var user User
+	_, err = conflunceClient.Do(req, &user)
+	perror(errors.Trace(err))
+
+	return user
 }
 
 func getContentByTitle(space string, title string) Content {

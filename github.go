@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/juju/errors"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/juju/errors"
 
 	"github.com/google/go-github/github"
 )
@@ -98,9 +99,10 @@ func getCreatedIssues(start string, end *string) []github.Issue {
 	})
 }
 
-func getCreatedPullRequests(start string, end *string) []github.Issue {
+func getCreatedPullRequests(user string, start string, end *string) []github.Issue {
 	return getIssues("created", map[string]string{
 		"is":      "pr",
+		"author":  user,
 		"created": generateDateRangeQuery(start, end),
 	})
 }
@@ -116,7 +118,7 @@ func getPullReuestsMentioned(start string, end *string, mentions string) []githu
 
 func getReviewPullRequests(user string, start string, end *string) []github.Issue {
 	return getIssues("updated", map[string]string{
-		"is":        "open",
+		// "is":        "open",
 		"type":      "pr",
 		"commenter": user,
 		"-author":   user,
